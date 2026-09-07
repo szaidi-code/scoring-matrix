@@ -38,7 +38,7 @@ _No response_
 
 ### Maintainer notes
 
-Local, on-demand hardware inventory and provisional readiness scores. No network access or automatic hardware scans. Uses Python 3.9+, util-linux; optional pciutils and usbutils improve inventory names. The bar widget runs inside the existing Omarchy shell; the separate application-menu installer is optional. Matrix 1.0 is a capacity and compatibility estimate, not a performance benchmark or certification. Reports remain local; no sudo is required.
+Local, on-demand hardware inventory and provisional readiness scores. No network access. Optional scan once per boot, disabled by default. Uses Python 3.9+, util-linux; optional pciutils and usbutils improve inventory names. The bar widget runs inside the existing Omarchy shell; the separate application-menu installer is optional. Matrix 1.0 is a capacity and compatibility estimate, not a performance benchmark or certification. Reports remain local; no sudo is required.
 
 ### Submission checklist
 

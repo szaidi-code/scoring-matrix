@@ -2,24 +2,40 @@
   "schemaVersion": 1,
   "id": "szaidi.scoring-matrix",
   "name": "Scoring Matrix",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "author": "szaidi-code",
-  "description": "Local hardware scores with evidence coverage, category explanations and offline comparisons. No telemetry or automatic scans.",
+  "description": "Local hardware scores with evidence coverage and offline comparisons. Optional scan once per boot; no telemetry.",
   "repository": "https://github.com/szaidi-code/scoring-matrix",
-  "kinds": ["bar-widget"],
-  "entryPoints": {"barWidget": "Widget.qml"},
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Widget.qml"
+  },
   "barWidget": {
     "displayName": "Scoring Matrix",
     "category": "System",
     "allowMultiple": false,
     "defaultSection": "right",
-    "defaults": {"targetDisk": ""},
-    "schema": [{
-      "key": "targetDisk",
-      "type": "string",
-      "label": "Whole disk to score",
-      "defaultValue": "",
-      "description": "Leave empty to detect the root disk, or select a whole disk such as /dev/nvme0n1. Applies on the next Rescan."
-    }]
+    "defaults": {
+      "targetDisk": "",
+      "scanOnStartup": false
+    },
+    "schema": [
+      {
+        "key": "targetDisk",
+        "type": "string",
+        "label": "Whole disk to score",
+        "defaultValue": "",
+        "description": "Leave empty to detect the root disk, or select a whole disk such as /dev/nvme0n1. Applies on the next Rescan."
+      },
+      {
+        "key": "scanOnStartup",
+        "type": "boolean",
+        "label": "Scan once per boot",
+        "defaultValue": false,
+        "description": "Scan when the widget starts, reusing a saved snapshot from this boot and disk selection. Takes effect on the next shell start."
+      }
+    ]
   }
 }

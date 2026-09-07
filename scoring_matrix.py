@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 
-VERSION = '0.1.0-beta.1'
+VERSION = '0.1.0-beta.2'
 MATRIX = '1.0'
 GIB = 1024 ** 3
 MAX_REPORT_BYTES = 2 * 1024 * 1024
@@ -334,6 +334,30 @@ def latest_report(directory):
     return max(candidates, key=lambda item: item[:2])[2] if candidates else None
 
 
+def boot_id():
+    try:
+        return Path('/proc/sys/kernel/random/boot_id').read_text().strip() or None
+    except OSError:
+        return None
+
+
+def ensure_boot_report(directory, target_disk=None):
+    """Reuse only a validated snapshot for this boot and disk selection."""
+    current_boot = boot_id()
+    existing = latest_report(directory)
+    if (current_boot and existing and existing.get('ScanBootId') == current_boot
+            and existing.get('ScanTargetDisk') == (target_disk or '')):
+        return existing
+    # Without a boot identity, load the saved report instead of repeatedly scanning.
+    if not current_boot and existing:
+        return existing
+    report = score(collect(target_disk))
+    report['ScanBootId'] = current_boot
+    report['ScanTargetDisk'] = target_disk or ''
+    save(report, directory)
+    return report
+
+
 def save(report, directory):
     validate_report(report)
     directory = Path(directory)
@@ -431,12 +455,17 @@ def main():
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--latest-json', action='store_true',
                         help='Read the latest valid saved report as JSON; does not scan')
+    parser.add_argument('--ensure-boot-report', action='store_true',
+                        help='Reuse this boot and disk selection snapshot, or scan and save one')
     parser.add_argument('--view-json', action='store_true', help='Return a compact shell payload with readiness evidence')
     parser.add_argument('--version', action='version', version=VERSION)
     args = parser.parse_args()
     try:
         if args.latest_json:
             report = latest_report(args.output)
+            print(json.dumps(view_report(report) if args.view_json else report))
+        elif args.ensure_boot_report:
+            report = ensure_boot_report(args.output, args.target_disk)
             print(json.dumps(view_report(report) if args.view_json else report))
         elif args.launch:
             launch()
@@ -446,6 +475,8 @@ def main():
             print(compare(args.compare))
         else:
             report = score(collect(args.target_disk, args.secure_boot_reported), args.label)
+            report['ScanBootId'] = boot_id()
+            report['ScanTargetDisk'] = args.target_disk or ''
             path = save(report, args.output)
             print(json.dumps(view_report(report)) if args.view_json else json.dumps(report) if args.json else render(report) + '\n\nSaved: ' + str(path))
         return 0

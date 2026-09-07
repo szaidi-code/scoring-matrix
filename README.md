@@ -1,6 +1,6 @@
 # Scoring Matrix
 
-**Private beta 0.1.0-beta.1.** A local hardware inventory and provisional **Omarchy Score**, with an Omarchy application-menu entry, optional native bar plugin, and Windows scanner. No cloud service, telemetry, account registration, background scans, or disk benchmarks. Nothing changes your disks or firmware.
+**Private beta 0.1.0-beta.2.** A local hardware inventory and provisional **Omarchy Score**, with an Omarchy application-menu entry, optional native bar plugin, and Windows scanner. No cloud service, telemetry, account registration, scheduled scans, or disk benchmarks. Nothing changes your disks or firmware.
 
 ## Install on Omarchy
 
@@ -32,13 +32,15 @@ For Omarchy versions that provide `omarchy plugin`, the same repository is also 
 omarchy plugin add git@github.com:szaidi-code/scoring-matrix.git --enable
 ```
 
-The **Score** bar button opens a native Omarchy popup with an animated total score, six clickable category cards, scoring explanations, and notes. The bar shows the most recently loaded score. Opening the popup reads the latest valid local report without scanning; **Rescan** performs a read-only scan and saves a new report. Arrow keys move between categories, Tab reaches controls, and Escape or clicking outside closes the popup. Plugin id: `szaidi.scoring-matrix`. It starts no scanner until you request a scan. The popup uses the same shell panel components as the built-in network panel and follows the current theme. The separate terminal launcher supports Ghostty, foot, Alacritty, kitty, or xterm. The application-menu installation above works separately and is the primary beta entry point. Native plugin add does not run `install.py`; run that separately if you want both.
+The **Score** bar button opens a native Omarchy popup with an animated total score, six clickable category cards, scoring explanations, and notes. The bar shows the most recently loaded score. Opening the popup reads the latest valid local report without scanning; **Rescan** performs a read-only scan and saves a new report. Arrow keys move between categories, Tab reaches controls, and Escape or clicking outside closes the popup. Plugin id: `szaidi.scoring-matrix`. By default, it starts no scanner until you request a scan. The popup uses the same shell panel components as the built-in network panel and follows the current theme. The separate terminal launcher supports Ghostty, foot, Alacritty, kitty, or xterm. The application-menu installation above works separately and is the primary beta entry point. Native plugin add does not run `install.py`; run that separately if you want both.
 
 The evidence summary distinguishes complete inventory, missing evidence, unknown architecture, and guest resources. “Observed” means inventory was collected, not that the hardware passed a functional test. Colors and the bar button follow the active Omarchy theme. Saved snapshots are validated before display; full PCI and peripheral inventory stays in the report file instead of being sent to the shell.
 
 With the panel open, press **R** to rescan or **N** to toggle notes. Arrow keys select a category; **Escape** closes the panel.
 
 The widget follows Omarchy's font family and shared typography scale, including a user `base-size` override in `~/.config/omarchy/shell.toml`. Body text uses the configured base size; headings and score numerals use the shell's proportional type tokens. Panel dimensions, cards, rings and spacing scale with the shell's spacing settings.
+
+Enable **Scan once per boot** in the widget settings, or run `omarchy bar set szaidi.scoring-matrix scanOnStartup true`. This takes effect when the shell next starts. A validated snapshot from the same boot and disk selection is reused across shell restarts. Set it to `false` to return to manual scans. Hardware scans remain local and read-only. If the boot identity is unavailable, an existing valid report is reused.
 
 
 

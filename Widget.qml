@@ -15,7 +15,7 @@ Panel {
   property bool showNotes: false
   property string errorMessage: ""
   readonly property string script: decodeURIComponent(Qt.resolvedUrl("scoring_matrix.py").toString().replace(/^file:\/\//, ""))
-  readonly property bool busy: scan.running || saved.running
+  readonly property bool busy: scan.running || saved.running || bootReport.running
   readonly property var categories: report ? report.Breakdown : []
   readonly property var current: categories.length > selected ? categories[selected] : null
   readonly property var accents: [Color.accent, Color.accent, Color.accent, Color.accent, Color.accent, Color.accent]
@@ -43,10 +43,13 @@ Panel {
     if (!root.busy) { root.errorMessage = ""; scan.running = true }
   }
   onOpenedChanged: if (opened && !busy) saved.running = true
-  Component.onCompleted: saved.running = true
+  Component.onCompleted: {
+    if (root.setting("scanOnStartup", false)) bootReport.running = true
+    else saved.running = true
+  }
   implicitWidth: trigger.implicitWidth
   implicitHeight: trigger.implicitHeight
-  Component.onDestruction: { scan.running = false; saved.running = false }
+  Component.onDestruction: { scan.running = false; saved.running = false; bootReport.running = false }
 
   WidgetButton {
     id: trigger
@@ -69,6 +72,23 @@ Panel {
     stdout: StdioCollector { onStreamFinished: if (text.trim()) root.acceptReport(text) }
     stderr: StdioCollector { onStreamFinished: if (text.trim()) root.errorMessage = text.trim() }
     onExited: function(code, status) { if (code !== 0 && !root.errorMessage) root.errorMessage = "Scan failed. Your previous report is still saved." }
+  }
+
+  Process {
+    id: bootReport
+    command: ["python3", root.script, "--ensure-boot-report", "--view-json"].concat(root.targetDisk ? ["--target-disk", root.targetDisk] : [])
+    stdout: StdioCollector { onStreamFinished: if (text.trim()) root.acceptReport(text) }
+    stderr: StdioCollector { onStreamFinished: if (text.trim()) root.errorMessage = text.trim() }
+    onExited: function(code, status) {
+      if (code !== 0) {
+        if (!root.errorMessage) root.errorMessage = "Startup scan failed. Try Rescan."
+      }
+    }
+  }
+  Timer {
+    interval: 95000
+    running: bootReport.running
+    onTriggered: { bootReport.signal(9); root.errorMessage = "Startup scan timed out. Try Rescan." }
   }
 
   Timer {

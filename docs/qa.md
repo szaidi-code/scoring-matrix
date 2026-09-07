@@ -34,4 +34,8 @@ The preview is a direct capture from the running QA panel. It is not a generated
 
 Replaced fixed text sizes with `Style.font` tokens, applied the shared font family to the ring numerals, and scaled geometry with `Style.space`. Verified the running panel with `base-size = 9` on QA laptop A (2560×1600 at 1.6 scale) and QA laptop B (1920×1080 internal display at 1.0 scale, with an additional display connected). Both plugin manifests validated and both shells responded after reload. Screenshots were inspected for wrapping, clipping and footer visibility. No widget or ring runtime errors appeared in the inspected startup logs; QA laptop B logged an unrelated duplicate clock IPC handler warning.
 
-QA laptop B runs a locally customized older plugin with startup scanning. Applied the typography changes and close-button removal to its existing QML while retaining its collector and startup behavior. The device's plugin is therefore not a byte-identical checkout of this repository. Original QML files were backed up under `~/.local/state/scoring-matrix/font-backup-*` on each device.
+Before build unification, QA laptop B ran a locally customized older plugin with startup scanning. Applied the typography changes and close-button removal to its existing QML while retaining its collector and startup behavior. That deployment was not a byte-identical checkout of this repository. Original QML files were backed up under `~/.local/state/scoring-matrix/font-backup-*` on each device.
+
+## Unified startup option
+
+The shared widget now exposes `scanOnStartup` (default false), backed by a validated boot-id and disk-selection cache. Focused tests cover restart reuse, new boots, changed disks, corrupt reports, scanner failure, and missing boot identity. Manual rescans still create a fresh snapshot. QA deployments use Git checkouts of the same main commit; QA laptop B enables startup scanning and QA laptop A retains manual scanning.
