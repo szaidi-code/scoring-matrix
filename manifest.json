@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "szaidi.scoring-matrix",
+  "name": "Scoring Matrix",
+  "version": "0.1.0-beta.1",
+  "author": "szaidi-code",
+  "description": "Open the local hardware scoring menu. Private beta; no telemetry or automatic scans.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {"barWidget": "Widget.qml"},
+  "barWidget": {
+    "displayName": "Scoring Matrix",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
