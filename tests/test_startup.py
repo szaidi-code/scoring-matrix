@@ -39,3 +39,16 @@ class StartupTests(unittest.TestCase):
             first = sm.ensure_boot_report(directory)
             self.assertEqual(sm.ensure_boot_report(directory), first)
             collect.assert_called_once()
+
+    @unittest.skipUnless(sm.sys.platform == 'linux', 'Linux process locking')
+    def test_multiple_bars_share_one_startup_scan(self):
+        import concurrent.futures
+        import time
+        def collect_once(target):
+            time.sleep(0.1)
+            return fixture()
+        with tempfile.TemporaryDirectory() as directory, patch.object(sm, 'boot_id', return_value='boot-a'), patch.object(sm, 'collect', side_effect=collect_once) as collect:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as workers:
+                reports = list(workers.map(lambda _: sm.ensure_boot_report(directory), range(3)))
+            collect.assert_called_once()
+            self.assertTrue(all(report == reports[0] for report in reports))

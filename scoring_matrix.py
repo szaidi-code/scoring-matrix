@@ -342,6 +342,18 @@ def boot_id():
 
 
 def ensure_boot_report(directory, target_disk=None):
+    """Serialize startup checks across bars on multiple monitors."""
+    if sys.platform != 'linux':
+        return _ensure_boot_report(directory, target_disk)
+    import fcntl
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (directory / '.startup.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        return _ensure_boot_report(directory, target_disk)
+
+
+def _ensure_boot_report(directory, target_disk=None):
     """Reuse only a validated snapshot for this boot and disk selection."""
     current_boot = boot_id()
     existing = latest_report(directory)
