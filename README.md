@@ -38,6 +38,8 @@ The evidence summary distinguishes complete inventory, missing evidence, unknown
 
 With the panel open, press **R** to rescan or **N** to toggle notes. Arrow keys select a category; **Escape** closes the panel.
 
+The widget follows Omarchy's font family and shared typography scale, including a user `base-size` override in `~/.config/omarchy/shell.toml`. Body text uses the configured base size; headings and score numerals use the shell's proportional type tokens. Panel dimensions, cards, rings and spacing scale with the shell's spacing settings.
+
 
 
 If root-disk detection is ambiguous, select a whole disk for the next **Rescan** in the widget settings, or use:

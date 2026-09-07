@@ -29,3 +29,9 @@ The installed QA plugin already had uncommitted changes. Its Widget.qml and coll
 Before a public release, still exercise disable/re-enable/removal, multiple monitors, a vertical bar, smaller display scales, and real Windows hardware collection. Synthetic Windows-shaped reports are covered by automated tests; this pass did not collect hardware on Windows. No performance benchmark or functional hardware certification was performed. The deadline failure path was not tested by waiting out a deliberately stalled process.
 
 The preview is a direct capture from the running QA panel. It is not a generated mockup. Full-desktop QA captures remain outside the plugin repository and should not be published.
+
+## Font-setting follow-up
+
+Replaced fixed text sizes with `Style.font` tokens, applied the shared font family to the ring numerals, and scaled geometry with `Style.space`. Verified the running panel with `base-size = 9` on QA laptop A (2560×1600 at 1.6 scale) and QA laptop B (1920×1080 internal display at 1.0 scale, with an additional display connected). Both plugin manifests validated and both shells responded after reload. Screenshots were inspected for wrapping, clipping and footer visibility. No widget or ring runtime errors appeared in the inspected startup logs; QA laptop B logged an unrelated duplicate clock IPC handler warning.
+
+QA laptop B runs a locally customized older plugin with startup scanning. Applied the typography changes and close-button removal to its existing QML while retaining its collector and startup behavior. The device's plugin is therefore not a byte-identical checkout of this repository. Original QML files were backed up under `~/.local/state/scoring-matrix/font-backup-*` on each device.
