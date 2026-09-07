@@ -145,7 +145,6 @@ Panel {
               Label { text: "YOUR MACHINE, DECODED"; font.pixelSize: 10; font.letterSpacing: 1.5; opacity: 0.6 }
               Label { text: "Scoring Matrix"; font.pixelSize: 23; font.bold: true }
             }
-            Action { text: "×"; implicitWidth: 32; Accessible.name: "Close score panel"; onClicked: root.close() }
           }
           Rectangle {
             Layout.fillWidth: true
