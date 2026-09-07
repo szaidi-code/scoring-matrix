@@ -4,13 +4,22 @@
   "name": "Scoring Matrix",
   "version": "0.1.0-beta.1",
   "author": "szaidi-code",
-  "description": "Open the local hardware scoring menu. Private beta; no telemetry or automatic scans.",
+  "description": "Local hardware scores with evidence coverage, category explanations and offline comparisons. No telemetry or automatic scans.",
+  "repository": "https://github.com/szaidi-code/scoring-matrix",
   "kinds": ["bar-widget"],
   "entryPoints": {"barWidget": "Widget.qml"},
   "barWidget": {
     "displayName": "Scoring Matrix",
     "category": "System",
     "allowMultiple": false,
-    "defaultSection": "right"
+    "defaultSection": "right",
+    "defaults": {"targetDisk": ""},
+    "schema": [{
+      "key": "targetDisk",
+      "type": "string",
+      "label": "Whole disk to score",
+      "defaultValue": "",
+      "description": "Leave empty to detect the root disk, or select a whole disk such as /dev/nvme0n1. Applies on the next Rescan."
+    }]
   }
 }

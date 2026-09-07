@@ -10,10 +10,14 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 
 VERSION = '0.1.0-beta.1'
 MATRIX = '1.0'
 GIB = 1024 ** 3
+MAX_REPORT_BYTES = 2 * 1024 * 1024
+CATEGORIES = [('CPU', 25, 25), ('RAM', 25, 25), ('Storage', 20, 20),
+              ('Graphics', 15, 12), ('Network', 10, 8), ('Firmware', 5, 5)]
 
 
 def tier(value, thresholds, points):
@@ -230,54 +234,153 @@ def report_dir():
     return Path(os.environ.get('XDG_STATE_HOME', str(Path.home()/'.local/state'))) / 'scoring-matrix/reports'
 
 
+def validate_report(report):
+    """Validate the shared Linux/Windows v1 contract before display or ranking."""
+    def number(value, maximum):
+        return (type(value) in (int, float) and 0 <= value <= maximum
+                and value == int(value))
+
+    if not isinstance(report, dict) or report.get('MatrixVersion') != MATRIX:
+        raise ValueError('Incompatible or missing matrix version')
+    for field in ('Computer', 'Captured', 'Status'):
+        if not isinstance(report.get(field), str) or not report[field].strip():
+            raise ValueError(f'Missing or invalid {field}')
+    try:
+        captured = dt.datetime.fromisoformat(report['Captured'].replace('Z', '+00:00'))
+    except ValueError as exc:
+        raise ValueError('Invalid capture timestamp') from exc
+    if captured.tzinfo is None:
+        captured = captured.replace(tzinfo=dt.timezone.utc)
+    parts = report.get('Breakdown')
+    if not isinstance(parts, list) or len(parts) != len(CATEGORIES):
+        raise ValueError('Expected six score categories')
+    for part, (category, maximum, ceiling) in zip(parts, CATEGORIES):
+        if (not isinstance(part, dict) or part.get('Category') != category
+                or not number(part.get('Maximum'), maximum) or part['Maximum'] != maximum
+                or not number(part.get('Points'), ceiling)
+                or type(part.get('Known')) is not bool
+                or not isinstance(part.get('Reason'), str)):
+            raise ValueError(f'Invalid {category} category')
+    expected = dict(Score=sum(p['Points'] for p in parts),
+                    Resources=sum(p['Points'] for p in parts[:3]),
+                    Compatibility=sum(p['Points'] for p in parts[3:]),
+                    Coverage=sum(p['Maximum'] for p in parts if p['Known']))
+    for field, total in expected.items():
+        if not number(report.get(field), 100) or report[field] != total:
+            raise ValueError(f'Invalid {field} total')
+    if (not isinstance(report.get('Inventory'), dict)
+            or not isinstance(report.get('Issues'), list)
+            or not all(isinstance(note, str) for note in report['Issues'])):
+        raise ValueError('Invalid inventory or notes')
+    return captured
+
+
+def read_report(path):
+    # Bound the actual read as well as the UI payload, including growing files.
+    with Path(path).open('rb') as stream:
+        raw = stream.read(MAX_REPORT_BYTES + 1)
+    if len(raw) > MAX_REPORT_BYTES:
+        raise ValueError('Report exceeds the 2 MiB limit')
+    report = json.loads(raw.decode('utf-8-sig'))
+    validate_report(report)
+    return report
+
+
+def assessment(report):
+    """Keep uncertainty separate from capacity. No score implies a tested device."""
+    inv = report['Inventory']
+    system = inv.get('System') or {}
+    model = ' '.join(str(system.get(k, '')) for k in ('Manufacturer', 'Model')) if isinstance(system, dict) else ''
+    virtual = inv.get('Virtualized') or re.search(r'vmware|virtualbox|virtual machine|qemu|kvm|parallels', model, re.I)
+    if virtual or report['Status'].startswith('Virtual environment'):
+        return dict(State='virtual', Title='Guest resources only',
+                    Detail='Test the physical computer before comparing installation candidates.', Rankable=False)
+    cpu = inv.get('CPU')
+    architecture = (isinstance(cpu, dict) and cpu.get('Architecture') in ('x86_64', 'amd64')) or (
+        isinstance(cpu, list) and bool(cpu) and all(isinstance(c, dict) and c.get('Architecture') == 9 for c in cpu))
+    if not architecture or report['Status'].startswith('Not a standard'):
+        return dict(State='architecture', Title='Architecture needs review',
+                    Detail='A standard x86-64 candidate has not been established.', Rankable=False)
+    if report['Coverage'] < 100 or report['Status'].startswith('Incomplete'):
+        missing = ', '.join(p['Category'] for p in report['Breakdown'] if not p['Known'])
+        return dict(State='incomplete', Title='Evidence missing',
+                    Detail='Review ' + (missing or 'required inventory') + ' before ranking this computer.', Rankable=False)
+    if report['Status'] != 'Provisional - Linux validation required':
+        return dict(State='review', Title='Status needs review', Detail=report['Status'], Rankable=False)
+    return dict(State='provisional', Title='Ready for hands-on checks',
+                Detail='Inventory is complete. Test graphics, Wi-Fi, audio and suspend under Omarchy.', Rankable=True)
+
+
+def view_report(report):
+    """Small validated payload for the shell; full inventory stays on disk."""
+    if report is None:
+        return None
+    validate_report(report)
+    return dict((key, value) for key, value in report.items() if key != 'Inventory') | {
+        'Inventory': {'Virtualized': bool(report['Inventory'].get('Virtualized'))},
+        'Assessment': assessment(report)}
+
+
 def latest_report(directory):
     """Read the latest compatible snapshot without scanning or changing files."""
     candidates = []
     for path in Path(directory).glob('*.json'):
         try:
-            report = json.loads(path.read_text(encoding='utf-8-sig'))
-            parts = report.get('Breakdown', [])
-            if (report.get('MatrixVersion') != MATRIX or len(parts) != 6
-                    or report.get('Score') != sum(p['Points'] for p in parts)
-                    or not isinstance(report.get('Inventory'), dict)):
-                continue
-            captured = dt.datetime.fromisoformat(report['Captured'].replace('Z', '+00:00'))
-            if captured.tzinfo is None:
-                captured = captured.replace(tzinfo=dt.timezone.utc)
+            report = read_report(path)
+            captured = validate_report(report)
             candidates.append((captured, path.name, report))
-        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        except (OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
             continue
     return max(candidates, key=lambda item: item[:2])[2] if candidates else None
 
 
 def save(report, directory):
+    validate_report(report)
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     label = re.sub(r'[^a-zA-Z0-9_.-]', '_', report['Computer']) or 'computer'
     stem = label + '-' + dt.datetime.now().strftime('%Y%m%d-%H%M%S-%f')
     path = directory / (stem + '.json')
-    path.write_text(json.dumps(report, indent=2), encoding='utf-8')
-    path.chmod(0o600)
     text_path = path.with_suffix('.txt')
-    text_path.write_text(render(report) + '\n\nINVENTORY\n' + json.dumps(report['Inventory'], indent=2), encoding='utf-8')
-    text_path.chmod(0o600)
+    for destination, content in ((text_path, render(report) + '\n\nINVENTORY\n' + json.dumps(report['Inventory'], indent=2)),
+                                 (path, json.dumps(report, indent=2))):
+        # Readers see either the previous snapshot or a complete new file.
+        staged = None
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=directory,
+                                             prefix='.snapshot-', delete=False) as stream:
+                staged = Path(stream.name)
+                stream.write(content)
+            staged.chmod(0o600)
+            os.replace(staged, destination)
+        finally:
+            if staged is not None:
+                staged.unlink(missing_ok=True)
     return path
 
 
 def compare(directory):
-    reports = []
+    newest = {}
     for path in Path(directory).glob('*.json'):
-        r = json.loads(path.read_text(encoding='utf-8-sig'))
-        if r.get('MatrixVersion') != MATRIX:
-            raise ValueError(f'Incompatible matrix in {path.name}')
-        if r.get('Score') != sum(p['Points'] for p in r.get('Breakdown', [])):
-            raise ValueError(f'Invalid score total in {path.name}')
-        reports.append(r)
+        try:
+            r = read_report(path)
+        except (ValueError, RecursionError) as exc:
+            raise ValueError(f'Invalid report {path.name}: {exc}') from exc
+        key = (validate_report(r), path.name)
+        if r['Computer'] not in newest or key > newest[r['Computer']][0]:
+            newest[r['Computer']] = (key, r)
+    reports = [item[1] for item in newest.values()]
     if not reports:
         raise ValueError('No JSON reports found; copy one report per computer into this folder.')
-    lines = ['Computer                 Score  Resources  Compat.  Coverage  Status']
-    for r in sorted(reports, key=lambda r: r['Score'], reverse=True):
-        lines.append(f"{r['Computer'][:24]:24} {r['Score']:3}/100   {r['Resources']:2}/70     {r['Compatibility']:2}/30    {r['Coverage']:3}/100  {r['Status']}")
+    lines = ['Latest snapshot per computer label. Matrix 1.0 estimates; no measured performance ranking.']
+    for rankable, heading in ((True, 'Complete candidates (provisional)'), (False, 'Needs review (unranked)')):
+        group = [r for r in reports if assessment(r)['Rankable'] == rankable]
+        lines += ['', heading, 'Computer                 Score  Resources  Compat.  Coverage  Status']
+        for r in sorted(group, key=lambda r: (-r['Score'] if rankable else 0, r['Computer'])):
+            label = ''.join(c for c in r['Computer'] if c.isprintable())[:24]
+            lines.append(f"{label:24} {r['Score']:3g}/100   {r['Resources']:2g}/70     {r['Compatibility']:2g}/30    {r['Coverage']:3g}/100  {assessment(r)['Title']}")
+        if not group:
+            lines.append('(none)')
     return '\n'.join(lines)
 
 
@@ -328,11 +431,13 @@ def main():
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--latest-json', action='store_true',
                         help='Read the latest valid saved report as JSON; does not scan')
+    parser.add_argument('--view-json', action='store_true', help='Return a compact shell payload with readiness evidence')
     parser.add_argument('--version', action='version', version=VERSION)
     args = parser.parse_args()
     try:
         if args.latest_json:
-            print(json.dumps(latest_report(args.output)))
+            report = latest_report(args.output)
+            print(json.dumps(view_report(report) if args.view_json else report))
         elif args.launch:
             launch()
         elif args.menu:
@@ -342,7 +447,7 @@ def main():
         else:
             report = score(collect(args.target_disk, args.secure_boot_reported), args.label)
             path = save(report, args.output)
-            print(json.dumps(report) if args.json else render(report) + '\n\nSaved: ' + str(path))
+            print(json.dumps(view_report(report)) if args.view_json else json.dumps(report) if args.json else render(report) + '\n\nSaved: ' + str(path))
         return 0
     except (OSError, ValueError, RuntimeError, KeyError) as e:
         print('Scoring Matrix: ' + str(e), file=sys.stderr)
