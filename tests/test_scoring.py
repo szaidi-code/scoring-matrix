@@ -111,6 +111,27 @@ class ScoringTests(unittest.TestCase):
         self.assertFalse(manifest['id'].startswith('omarchy.'))
         self.assertTrue((ROOT/manifest['entryPoints']['barWidget']).is_file())
 
+    def test_latest_report_uses_capture_time_and_skips_invalid_reports(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            self.assertIsNone(sm.latest_report(folder))
+            older = sm.score(fixture(), 'older')
+            older['Captured'] = '2026-01-01T00:00:00+00:00'
+            newer = copy.deepcopy(older)
+            newer.update(Computer='newer', Captured='2026-01-02T00:00:00Z')
+            # Filename order and creation time must not determine the snapshot.
+            (folder/'a.json').write_text(json.dumps(newer), encoding='utf-8-sig')
+            (folder/'z.json').write_text(json.dumps(older))
+            (folder/'broken.json').write_text('{')
+            (folder/'null.json').write_text('null')
+            incompatible = copy.deepcopy(newer)
+            incompatible['MatrixVersion'] = '2.0'
+            (folder/'future.json').write_text(json.dumps(incompatible))
+            invalid = copy.deepcopy(newer)
+            invalid['Score'] += 1
+            (folder/'bad-total.json').write_text(json.dumps(invalid))
+            self.assertEqual(sm.latest_report(folder)['Computer'], 'newer')
+
 
 if __name__ == '__main__':
     unittest.main()

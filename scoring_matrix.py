@@ -128,7 +128,7 @@ def collect(target=None, secure_reported='unknown'):
 
     disks = []
     for node in roots:
-        if node.get('type') != 'disk':
+        if node.get('type') != 'disk' or node.get('name', '').startswith('zram'):
             continue
         tran = node.get('tran') or ''
         rota = node.get('rota')
@@ -170,8 +170,13 @@ def collect(target=None, secure_reported='unknown'):
         wireless = (interface/'wireless').exists() or (interface/'phy80211').exists()
         vendor = read(device/'vendor') or read(device/'../idVendor', '')
         driver = device/'driver'
+        usb_product = read(device/'../product', '')
+        internal = vendor.lower() == '05ac' and usb_product == 'Apple T2 Controller'
+        if internal:
+            errors.append(f'{interface.name}: internal Apple T2 link; excluded from Ethernet points.')
         network.append(dict(Name=interface.name, Wireless=wireless,
-                            Ethernet=not wireless and read(interface/'type') == '1',
+                            Ethernet=not wireless and not internal and read(interface/'type') == '1',
+                            Internal=internal, Product=usb_product,
                             Vendor=vendor, Device=read(device/'device', ''),
                             Driver=driver.resolve().name if driver.exists() else None,
                             State=read(interface/'operstate'),
@@ -223,6 +228,26 @@ def render(report):
 
 def report_dir():
     return Path(os.environ.get('XDG_STATE_HOME', str(Path.home()/'.local/state'))) / 'scoring-matrix/reports'
+
+
+def latest_report(directory):
+    """Read the latest compatible snapshot without scanning or changing files."""
+    candidates = []
+    for path in Path(directory).glob('*.json'):
+        try:
+            report = json.loads(path.read_text(encoding='utf-8-sig'))
+            parts = report.get('Breakdown', [])
+            if (report.get('MatrixVersion') != MATRIX or len(parts) != 6
+                    or report.get('Score') != sum(p['Points'] for p in parts)
+                    or not isinstance(report.get('Inventory'), dict)):
+                continue
+            captured = dt.datetime.fromisoformat(report['Captured'].replace('Z', '+00:00'))
+            if captured.tzinfo is None:
+                captured = captured.replace(tzinfo=dt.timezone.utc)
+            candidates.append((captured, path.name, report))
+        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+            continue
+    return max(candidates, key=lambda item: item[:2])[2] if candidates else None
 
 
 def save(report, directory):
@@ -301,10 +326,14 @@ def main():
     parser.add_argument('--output', type=Path, default=report_dir())
     parser.add_argument('--compare', type=Path)
     parser.add_argument('--json', action='store_true')
+    parser.add_argument('--latest-json', action='store_true',
+                        help='Read the latest valid saved report as JSON; does not scan')
     parser.add_argument('--version', action='version', version=VERSION)
     args = parser.parse_args()
     try:
-        if args.launch:
+        if args.latest_json:
+            print(json.dumps(latest_report(args.output)))
+        elif args.launch:
             launch()
         elif args.menu:
             menu()

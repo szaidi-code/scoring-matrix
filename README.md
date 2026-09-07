@@ -32,9 +32,9 @@ For Omarchy versions that provide `omarchy plugin`, the same repository is also 
 omarchy plugin add git@github.com:szaidi-code/scoring-matrix.git --enable
 ```
 
-The **Score** bar button opens the same terminal menu. Plugin id: `szaidi.scoring-matrix`. It starts no scanner until you request a scan. The button supports Ghostty, foot, Alacritty, kitty, or xterm. The application-menu installation above works separately and is the primary beta entry point. Native plugin add does not run `install.py`; run that separately if you want both.
+The **Score** bar button opens a native Omarchy popup with an animated total score, six clickable category cards, scoring explanations, and notes. The bar shows the most recently loaded score. Opening the popup reads the latest valid local report without scanning; **Rescan** performs a read-only scan and saves a new report. Arrow keys move between categories, Tab reaches controls, and Escape or clicking outside closes the popup. Plugin id: `szaidi.scoring-matrix`. It starts no scanner until you request a scan. The popup uses the same shell panel components as the built-in network panel and follows the current theme. The separate terminal launcher supports Ghostty, foot, Alacritty, kitty, or xterm. The application-menu installation above works separately and is the primary beta entry point. Native plugin add does not run `install.py`; run that separately if you want both.
 
-This native plugin targets the shell API documented in September 2026. It has not yet been visually tested in an actual Omarchy session; testing that integration is part of the beta. On an older Omarchy without this plugin API, use the application-menu installation.
+This native plugin targets the shell API documented in September 2026. The popup has been visually tested on Omarchy 4.0.2; it requires the native shell Panel and KeyboardPanel API. On an older Omarchy without this plugin API, use the application-menu installation.
 
 ## Windows devices
 
