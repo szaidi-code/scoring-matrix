@@ -92,7 +92,7 @@ def score(inv, label=None):
 
 def collect(target=None, secure_reported='unknown'):
     if platform.system() != 'Linux':
-        raise RuntimeError('Use windows/OmarchyScore.ps1 on Windows. Hardware collection requires Linux.')
+        raise RuntimeError('Hardware collection requires Linux. Run this collector on your Omarchy computer.')
     errors = []
 
     def read(path, default=None):

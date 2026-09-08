@@ -9,4 +9,4 @@
 - Optional scan once per boot, disabled by default, with caching and locking across multiple displays.
 - MIT license; terminal application installation and removal preserve saved reports.
 
-Matrix 1.0 remains a provisional capacity and compatibility estimate with an automatic ceiling of 95. The Windows collector is included; functional Windows runtime testing is pending.
+Matrix 1.0 remains a provisional capacity and compatibility estimate with an automatic ceiling of 95. Hardware collection requires Linux.

@@ -69,7 +69,7 @@ if __name__ == '__main__':
     p.add_argument('--uninstall', action='store_true')
     a = p.parse_args()
     if sys.platform != 'linux':
-        p.error('Run this installer on Omarchy/Linux. Use windows/OmarchyScore.ps1 on Windows.')
+        p.error('Run this installer on Omarchy/Linux.')
     try:
         install(os.environ.get('XDG_DATA_HOME', str(Path.home()/'.local/share')), Path(__file__).parent, a.uninstall)
     except (OSError, ValueError) as e:

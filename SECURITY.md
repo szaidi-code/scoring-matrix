@@ -8,7 +8,7 @@ Use [GitHub private vulnerability reporting](https://github.com/szaidi-code/scor
 
 The widget runs with the user's permissions inside Omarchy's shell. Hardware collection invokes local commands with argument arrays, without shell evaluation. It does not request elevated privileges or send reports over the network. The optional terminal installer writes only its managed application files and desktop entry; removal preserves user reports.
 
-Linux reports are local hardware inventory and can include computer labels, device identifiers, mount paths and boot identity. Review reports before sharing them. JSON and text snapshots are written through private temporary files. Report validation checks consistency; it does not establish authenticity. Windows report permissions follow the chosen output directory's Windows access controls.
+Linux reports are local hardware inventory and can include computer labels, device identifiers, mount paths and boot identity. Review reports before sharing them. JSON and text snapshots are written through private temporary files. Report validation checks consistency; it does not establish authenticity.
 
 ## Repository checks
 
