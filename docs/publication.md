@@ -7,7 +7,7 @@ Release: **0.1.0-beta.2**, plugin ID `szaidi.scoring-matrix`, category **Hardwar
 - Root manifest and native QML entry point, with startup scanning disabled by default.
 - MIT license, copyright 2026 szaidi-code, declared in the manifest and included by the terminal installer.
 - HTTPS installation, update and removal instructions, dependencies, data storage and beta limitations.
-- The optional preview was removed during privacy cleanup.
+- Root `preview.png` shows the actual widget with the anonymous label “This computer”; README displays the same approved image.
 - Release notes in [CHANGELOG.md](../CHANGELOG.md), runtime evidence in [qa.md](qa.md), and issue body in [submission.md](submission.md).
 - Plugin ID absent from the marketplace registry checked September 7, 2026.
 

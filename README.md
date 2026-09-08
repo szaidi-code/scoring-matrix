@@ -2,6 +2,8 @@
 
 **Beta 0.1.0-beta.2 · MIT licensed.** A local hardware inventory and provisional **Omarchy Score**, with a native Omarchy bar widget and optional terminal application. No cloud service, telemetry, account registration, scheduled scans, or disk benchmarks. Nothing changes your disks or firmware.
 
+![Scoring Matrix widget showing category scores and evidence coverage](preview.png)
+
 ## Install the Omarchy widget
 
 On Omarchy versions with the native shell plugin API:
