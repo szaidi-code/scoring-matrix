@@ -4,3 +4,15 @@ __pycache__/
 *.pyc
 .venv/
 *.log
+
+# Local credentials and QA artifacts
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+.work/
