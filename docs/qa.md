@@ -1,6 +1,6 @@
 # Candidate QA — September 7, 2026
 
-The implementation is based on Scoring Matrix commit `ff874bd09400543468176c618de93e77aec279c6`. Matrix version remains 1.0; this is a beta candidate, not a published release.
+The implementation is based on Scoring Matrix commit `278d2dbb0ca598756c8f14c82980c7e0b6a87334`. Matrix version remains 1.0; this is a beta candidate, not a published release.
 
 ## Results
 
@@ -28,7 +28,7 @@ The installed QA plugin already had uncommitted changes. Its Widget.qml and coll
 
 Before a public release, still exercise disable/re-enable/removal, multiple monitors, a vertical bar, smaller display scales, and real Windows hardware collection. Synthetic Windows-shaped reports are covered by automated tests; this pass did not collect hardware on Windows. No performance benchmark or functional hardware certification was performed. The deadline failure path was not tested by waiting out a deliberately stalled process.
 
-The preview is a direct capture from the running QA panel. It is not a generated mockup. Full-desktop QA captures remain outside the plugin repository and should not be published.
+Visual verification used actual running panels. QA screenshots are not included in the public repository.
 
 ## Font-setting follow-up
 
@@ -42,7 +42,7 @@ The shared widget now exposes `scanOnStartup` (default false), backed by a valid
 
 ## Marketplace preparation
 
-The unified runtime at `05dbb655e964e9e4b705a6a980e12fd0e358e0bb` passed all 26 tests on both QA laptop A and QA laptop B. Both installed checkouts were clean and their widget, ring, collector and manifest hashes matched. Screenshots on both internal displays confirmed the shared layout and font-size behavior. QA laptop B enables startup scanning; QA laptop A retains manual scans. Multi-monitor startup requests are serialized with a file lock.
+The unified runtime at `17cd4ce804c0cbadf0c51bf759184803b0685533` passed all 26 tests on both QA laptop A and QA laptop B. Both installed checkouts were clean and their widget, ring, collector and manifest hashes matched. Screenshots on both internal displays confirmed the shared layout and font-size behavior. QA laptop B enables startup scanning; QA laptop A retains manual scans. Multi-monitor startup requests are serialized with a file lock.
 
 The submission-preparation changes add licensing and release documentation, include LICENSE in the optional installer, and align its version marker with the manifest. Local Windows validation passed 25 tests with the Linux locking test skipped. A fresh staging check could not connect to either QA machine over SSH; the prior 26-test Linux/runtime results above apply to the unified build before these packaging changes.
 

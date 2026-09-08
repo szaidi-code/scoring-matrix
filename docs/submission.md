@@ -20,12 +20,12 @@ Scoring Matrix 0.1.0-beta.2 is a native Omarchy bar widget for local hardware in
 
 Requires the native Omarchy shell plugin API (tested on Omarchy 4.0.2), Python 3.9+ and util-linux. Optional pciutils and usbutils improve inventory names. No telemetry, network calls from the collector, sudo, disk benchmarks, or firmware changes. Optional scan once per boot is disabled by default and serialized across multiple displays. Reports stay under the user's XDG state directory and are preserved on removal.
 
-MIT licensed. The preview is a capture of the actual widget. The optional terminal application installer and Windows collector are separate from plugin installation. Windows functional runtime testing remains pending. Matrix 1.0 is an inventory estimate, not a performance benchmark or certification.
+MIT licensed. No preview asset is included. The optional terminal application installer and Windows collector are separate from plugin installation. Windows functional runtime testing remains pending. Matrix 1.0 is an inventory estimate, not a performance benchmark or certification.
 
 ### Submission checklist
 
-- [ ] The repository is public and contains installation and removal instructions.
+- [x] The repository is public and contains installation and removal instructions.
 - [x] I have documented the plugin license and any external dependencies.
-- [ ] I confirm that I own or have permission to submit this plugin and its preview assets.
+- [x] I confirm that I own or have permission to submit this plugin and its preview assets.
 - [x] The plugin does not overwrite user configuration without explicit consent.
-- [ ] I understand that approval is for listing and is not a security review.
+- [x] I understand that approval is for listing and is not a security review.

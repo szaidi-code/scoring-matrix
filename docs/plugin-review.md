@@ -10,7 +10,7 @@ Scoring Matrix should focus on explainable hardware readiness and local comparis
 | Comparison | Local reports with explicit matrix version | Rank derived from score against a fixed population in inspected source | No installation-readiness ranking |
 | Useful pattern | Transparent rules and saved evidence | Concise component summaries and an engaging overview | Native shell integration and explicit unavailable-sensor states |
 
-Inspected repositories: Scoring Matrix at `ff874bd09400543468176c618de93e77aec279c6`, OmaRank at `9bf1542b8f00ea8ecb88b2e3d4dd19d6d50c3492`, and Hardware Monitor at `f1373fba766fc1702e96eef0c9fe844ffeaafddb`. No source or image assets were copied from the comparison plugins. OmaRank's inspected HEAD is newer than its marketplace-listed commit `6cca69e816555ff2046619f89d3787e315f2b150`.
+Inspected repositories: Scoring Matrix at `278d2dbb0ca598756c8f14c82980c7e0b6a87334`, OmaRank at `9bf1542b8f00ea8ecb88b2e3d4dd19d6d50c3492`, and Hardware Monitor at `f1373fba766fc1702e96eef0c9fe844ffeaafddb`. No source or image assets were copied from the comparison plugins. OmaRank's inspected HEAD is newer than its marketplace-listed commit `6cca69e816555ff2046619f89d3787e315f2b150`.
 
 ## Findings and implemented changes
 
