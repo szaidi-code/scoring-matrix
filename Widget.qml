@@ -186,7 +186,7 @@ Panel {
               ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Style.space(5)
-                Label { Layout.fillWidth: true; text: root.report ? root.report.Computer : "Ready when you are"; font.pixelSize: Style.font.heading; font.bold: true }
+                Label { Layout.fillWidth: true; text: root.report ? "This computer" : "Ready when you are"; font.pixelSize: Style.font.heading; font.bold: true }
                 Label { Layout.fillWidth: true; text: root.report ? "Resources  " + root.report.Resources + "/70\nCompatibility  " + root.report.Compatibility + "/30" : "Take a local snapshot to discover your score."; lineHeight: 1.25 }
                 Label { Layout.fillWidth: true; text: root.busy ? "Taking a look under the hood…" : "Provisional · automatic ceiling 95"; font.pixelSize: Style.font.bodySmall; opacity: 0.65 }
               }
