@@ -1,51 +1,24 @@
-# Marketplace publication preparation
+# Marketplace submission candidate
 
-The candidate is still a private beta. Do not submit the draft below until repository visibility, license and ownership decisions are complete.
+Release: **0.1.0-beta.2**, plugin ID `szaidi.scoring-matrix`, category **Hardware**, tags **bar, quickshell, system**. Proposed issue title: **[Plugin]: Scoring Matrix**.
 
-## Current readiness
+## Prepared
 
-- Root manifest, permanent ID `szaidi.scoring-matrix`, QML entry point, dependencies, install/update/removal instructions: present.
-- Public repository: README identifies the project as private beta; visibility must be confirmed and changed by the owner before listing.
-- Root license: missing. Choose an appropriate license and copyright holder before adding the file and manifest `license` field.
-- Preview: `preview.png` captures the actual QA plugin, without unrelated application windows. It contains the QA computer label and provisional score; review the asset before public submission.
-- Runtime QA: see `qa.md` for the tested candidate and limits.
+- Root manifest and native QML entry point, with startup scanning disabled by default.
+- MIT license, copyright 2026 szaidi-code, declared in the manifest and included by the terminal installer.
+- HTTPS installation, update and removal instructions, dependencies, data storage and beta limitations.
+- Root preview captured from the running widget; no desktop wallpaper or unrelated windows in the asset.
+- Release notes in [CHANGELOG.md](../CHANGELOG.md), runtime evidence in [qa.md](qa.md), and issue body in [submission.md](submission.md).
+- Plugin ID absent from the marketplace registry checked September 7, 2026.
 
-The marketplace takes one public GitHub repository with a root manifest. It validates the submitted commit and runs a static security baseline. A maintainer must review and approve the exact candidate for listing. Follow-up updates use the plugin verification form and a full upstream commit SHA; a newer Git commit alone does not establish that the marketplace snapshot is updated.
+## Final publication steps
+
+The GitHub repository was confirmed private on September 7, 2026. Making it public exposes its existing commit history as well as current files. Obtain the owner's final publication instruction before changing visibility or sending the submission issue.
+
+1. Confirm the owner has rights to the code and preview and understands marketplace approval is for listing, not a security review.
+2. Make `szaidi-code/scoring-matrix` public and update the repository description to: `Local hardware scores and evidence summaries for Omarchy. Native bar widget, optional startup scan, offline comparisons. MIT licensed.`
+3. Confirm an unauthenticated clone works, CI is green, and the public default branch contains the intended candidate.
+4. Check the remaining boxes in [submission.md](submission.md) once their statements are true, then create the issue with the proposed title in `omacom/omarchy-plugin-marketplace`.
+5. Record the issue URL and full reviewed commit SHA. Marketplace automation validates the current public commit; maintainer approval is still required. Updates use the verification workflow for an exact upstream commit.
 
 Sources: [publishing guide](https://plugins.omarchy.org/publish.html), [submission procedure](https://github.com/omacom/omarchy-plugin-marketplace/blob/main/SUBMISSION.md), [submission form](https://github.com/omacom/omarchy-plugin-marketplace/issues/new?template=submit-plugin.yml).
-
-## Draft title
-
-`[Plugin]: Scoring Matrix`
-
-## Draft body
-
-### Repository URL
-
-https://github.com/szaidi-code/scoring-matrix
-
-### Category
-
-Hardware
-
-### Tags
-
-bar, quickshell, system
-
-### Suggest a missing tag
-
-_No response_
-
-### Maintainer notes
-
-Local, on-demand hardware inventory and provisional readiness scores. No network access. Optional scan once per boot, disabled by default. Uses Python 3.9+, util-linux; optional pciutils and usbutils improve inventory names. The bar widget runs inside the existing Omarchy shell; the separate application-menu installer is optional. Matrix 1.0 is a capacity and compatibility estimate, not a performance benchmark or certification. Reports remain local; no sudo is required.
-
-### Submission checklist
-
-- [ ] The repository is public and contains installation and removal instructions.
-- [ ] I have documented the plugin license and any external dependencies.
-- [ ] I confirm that I own or have permission to submit this plugin and its preview assets.
-- [ ] The plugin does not overwrite user configuration without explicit consent.
-- [ ] I understand that approval is for listing and is not a security review.
-
-The unchecked draft is intentionally not submission-ready. The owner must confirm each statement, choose the license and approve the completed title/body before an issue is created.

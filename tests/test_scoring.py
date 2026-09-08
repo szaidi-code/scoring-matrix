@@ -86,6 +86,8 @@ class ScoringTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='scoring test ') as tmp:
             desktop = installer.install(tmp, ROOT)
             self.assertIn('--menu', desktop.read_text())
+            self.assertEqual((Path(tmp)/'scoring-matrix/LICENSE').read_text(), (ROOT/'LICENSE').read_text())
+            self.assertEqual(json.loads((Path(tmp)/'scoring-matrix/installation.json').read_text())['version'], sm.VERSION)
             self.assertIn('Terminal=true', desktop.read_text())
             installer.install(tmp, ROOT)
             extra = Path(tmp)/'scoring-matrix/user-note.txt'

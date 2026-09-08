@@ -1,6 +1,6 @@
 # Candidate QA — September 7, 2026
 
-The implementation is based on Scoring Matrix commit `ff874bd09400543468176c618de93e77aec279c6`. Matrix version remains 1.0; this is a private beta candidate, not a published release.
+The implementation is based on Scoring Matrix commit `ff874bd09400543468176c618de93e77aec279c6`. Matrix version remains 1.0; this is a beta candidate, not a published release.
 
 ## Results
 
@@ -39,3 +39,11 @@ Before build unification, QA laptop B ran a locally customized older plugin with
 ## Unified startup option
 
 The shared widget now exposes `scanOnStartup` (default false), backed by a validated boot-id and disk-selection cache. Focused tests cover restart reuse, new boots, changed disks, corrupt reports, scanner failure, and missing boot identity. Manual rescans still create a fresh snapshot. QA deployments use Git checkouts of the same main commit; QA laptop B enables startup scanning and QA laptop A retains manual scanning.
+
+## Marketplace preparation
+
+The unified runtime at `05dbb655e964e9e4b705a6a980e12fd0e358e0bb` passed all 26 tests on both QA laptop A and QA laptop B. Both installed checkouts were clean and their widget, ring, collector and manifest hashes matched. Screenshots on both internal displays confirmed the shared layout and font-size behavior. QA laptop B enables startup scanning; QA laptop A retains manual scans. Multi-monitor startup requests are serialized with a file lock.
+
+The submission-preparation changes add licensing and release documentation, include LICENSE in the optional installer, and align its version marker with the manifest. Local Windows validation passed 25 tests with the Linux locking test skipped. A fresh staging check could not connect to either QA machine over SSH; the prior 26-test Linux/runtime results above apply to the unified build before these packaging changes.
+
+The marketplace baseline analysis was run locally against the candidate files using marketplace commit `d5ac6f9b` on September 7, 2026. It returned `review-required`, `blocksApproval: false`, and no unsafe-execution findings. Capability flags concern the optional installer, documented repository installation, and package installation inside GitHub CI (including broad keyword matches in documentation). This is a local precheck, not official marketplace approval or a complete security audit.

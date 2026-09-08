@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scoring Matrix private beta. Standard-library-only, offline Linux collector."""
+"""Scoring Matrix beta. Standard-library-only, offline Linux collector."""
 import argparse
 import datetime as dt
 import json
@@ -422,7 +422,7 @@ def compare(directory):
 
 def menu():
     while True:
-        print('\nSCORING MATRIX | private beta\n1  Score this computer\n2  Score a specific disk\n3  Compare computer reports\n4  Open reports folder\n5  View scoring matrix\n0  Exit')
+        print('\nSCORING MATRIX | beta\n1  Score this computer\n2  Score a specific disk\n3  Compare computer reports\n4  Open reports folder\n5  View scoring matrix\n0  Exit')
         choice = input('Choose: ').strip()
         try:
             if choice == '0':

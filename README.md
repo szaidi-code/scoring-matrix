@@ -1,13 +1,13 @@
 # Scoring Matrix
 
-**Private beta 0.1.0-beta.2.** A local hardware inventory and provisional **Omarchy Score**, with an Omarchy application-menu entry, optional native bar plugin, and Windows scanner. No cloud service, telemetry, account registration, scheduled scans, or disk benchmarks. Nothing changes your disks or firmware.
+**Beta 0.1.0-beta.2 · MIT licensed.** A local hardware inventory and provisional **Omarchy Score**, with an Omarchy application-menu entry, optional native bar plugin, and Windows scanner. No cloud service, telemetry, account registration, scheduled scans, or disk benchmarks. Nothing changes your disks or firmware.
 
 ## Install on Omarchy
 
-Your GitHub account must have access to this private repository. Use your existing GitHub SSH authentication:
+For the native bar widget, use the plugin installation below. To also install the optional terminal application:
 
 ```bash
-git clone git@github.com:szaidi-code/scoring-matrix.git
+git clone https://github.com/szaidi-code/scoring-matrix.git
 cd scoring-matrix
 python3 install.py
 ```
@@ -29,7 +29,7 @@ The installer copies the app to `$XDG_DATA_HOME/scoring-matrix` (default `~/.loc
 For Omarchy versions that provide `omarchy plugin`, the same repository is also a shell plugin:
 
 ```bash
-omarchy plugin add git@github.com:szaidi-code/scoring-matrix.git --enable
+omarchy plugin add https://github.com/szaidi-code/scoring-matrix --enable
 ```
 
 The **Score** bar button opens a native Omarchy popup with an animated total score, six clickable category cards, scoring explanations, and notes. The bar shows the most recently loaded score. Opening the popup reads the latest valid local report without scanning; **Rescan** performs a read-only scan and saves a new report. Arrow keys move between categories, Tab reaches controls, and Escape or clicking outside closes the popup. Plugin id: `szaidi.scoring-matrix`. By default, it starts no scanner until you request a scan. The popup uses the same shell panel components as the built-in network panel and follows the current theme. The separate terminal launcher supports Ghostty, foot, Alacritty, kitty, or xterm. The application-menu installation above works separately and is the primary beta entry point. Native plugin add does not run `install.py`; run that separately if you want both.
@@ -116,9 +116,13 @@ python3 -m unittest discover -s tests -v
 omarchy plugin validate .
 ```
 
-Try menu launch, default/explicit disk selection, saved reports, comparisons with Windows, Secure Boot provenance, suspend/resume, audio, Bluetooth and external displays. Keep the repository private until you decide the beta is ready. Public directory submission, public visibility, and an open-source license are separate future decisions.
+Try menu launch, default/explicit disk selection, saved reports, comparisons with Windows, Secure Boot provenance, suspend/resume, audio, Bluetooth and external displays. This is a beta: scores describe observed inventory, not tested hardware performance or installation certification.
 
 See [the comparison and design review](docs/plugin-review.md) and [publication preparation](docs/publication.md) for the implementation rationale and remaining release decisions.
+
+## License
+
+[MIT](LICENSE), copyright 2026 szaidi-code.
 
 ## References
 

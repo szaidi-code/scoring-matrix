@@ -37,5 +37,6 @@
         "description": "Scan when the widget starts, reusing a saved snapshot from this boot and disk selection. Takes effect on the next shell start."
       }
     ]
-  }
+  },
+  "license": "MIT"
 }

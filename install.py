@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 
-FILES = ('scoring_matrix.py', 'MATRIX.md')
+FILES = ('scoring_matrix.py', 'MATRIX.md', 'LICENSE')
 
 
 def desktop_quote(value):
@@ -51,7 +51,7 @@ def install(data_home, source, uninstall=False):
     desktop.parent.mkdir(parents=True, exist_ok=True)
     for name in FILES:
         shutil.copyfile(Path(source)/name, app/name)
-    marker.write_text(json.dumps({'app': 'scoring-matrix', 'version': '0.1.0-beta.1'}))
+    marker.write_text(json.dumps({'app': 'scoring-matrix', 'version': json.loads((Path(source)/'manifest.json').read_text())['version']}))
     desktop.write_text('[Desktop Entry]\nType=Application\nName=Scoring Matrix\n'
                        'Comment=Score this computer for Omarchy and compare your devices\n'
                        f'Exec={exec_line}\nTerminal=true\nIcon=utilities-system-monitor\n'
