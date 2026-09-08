@@ -25,7 +25,7 @@ def tier(value, thresholds, points):
 
 
 def score(inv, label=None):
-    """Same provisional weights as Windows v1; detected does not mean tested."""
+    """Provisional matrix v1 weights; detected does not mean tested."""
     parts, notes = [], list(inv.get('Errors', []))
 
     def add(name, points, maximum, known, reason):
@@ -235,7 +235,7 @@ def report_dir():
 
 
 def validate_report(report):
-    """Validate the shared Linux/Windows v1 contract before display or ranking."""
+    """Validate the matrix v1 report contract before display or ranking."""
     def number(value, maximum):
         return (type(value) in (int, float) and 0 <= value <= maximum
                 and value == int(value))
