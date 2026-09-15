@@ -57,7 +57,7 @@ Panel {
     bar: root.bar
     text: root.busy ? "Score ···" : "Score" + (root.report ? " " + root.report.Score : "")
     active: root.opened
-    tooltipText: root.report ? root.report.Assessment.Title + " · evidence " + root.report.Coverage + "/100" : "Open Scoring Matrix"
+    tooltipText: root.report ? root.report.Assessment.Title + " · evidence " + root.report.Coverage + "/100" : "Open Omarchy Hardware Score"
     onPressed: function(button) { if (button === Qt.LeftButton) root.toggle() }
   }
   Process {
@@ -163,7 +163,7 @@ Panel {
               Layout.fillWidth: true
               spacing: Style.space(3)
               Label { text: "YOUR MACHINE, DECODED"; font.pixelSize: Style.font.caption; font.letterSpacing: Style.spaceReal(1.5); opacity: 0.6 }
-              Label { text: "Scoring Matrix"; font.pixelSize: Style.font.display; font.bold: true }
+              Label { text: "Omarchy Hardware Score"; font.pixelSize: Style.font.display; font.bold: true }
             }
           }
           Rectangle {

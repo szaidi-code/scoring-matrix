@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "szaidi.scoring-matrix",
-  "name": "Scoring Matrix",
+  "name": "Omarchy Hardware Score",
   "version": "0.1.0-beta.2",
   "author": "szaidi-code",
   "description": "Local hardware scores with evidence coverage and offline comparisons. Optional scan once per boot; no telemetry.",
@@ -13,7 +13,7 @@
     "barWidget": "Widget.qml"
   },
   "barWidget": {
-    "displayName": "Scoring Matrix",
+    "displayName": "Omarchy Hardware Score",
     "category": "System",
     "allowMultiple": false,
     "defaultSection": "right",

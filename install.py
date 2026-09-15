@@ -52,7 +52,7 @@ def install(data_home, source, uninstall=False):
     for name in FILES:
         shutil.copyfile(Path(source)/name, app/name)
     marker.write_text(json.dumps({'app': 'scoring-matrix', 'version': json.loads((Path(source)/'manifest.json').read_text())['version']}))
-    desktop.write_text('[Desktop Entry]\nType=Application\nName=Scoring Matrix\n'
+    desktop.write_text('[Desktop Entry]\nType=Application\nName=Omarchy Hardware Score\n'
                        'Comment=Score this computer for Omarchy and compare your devices\n'
                        f'Exec={exec_line}\nTerminal=true\nIcon=utilities-system-monitor\n'
                        'Categories=System;Utility;\nKeywords=Omarchy;Hardware;Score;Resources;\n'
@@ -60,7 +60,7 @@ def install(data_home, source, uninstall=False):
     if shutil.which('update-desktop-database'):
         subprocess.run(['update-desktop-database', str(desktop.parent)], check=False)
     print('Installed: ' + str(desktop))
-    print('Open your application launcher and search for Scoring Matrix.')
+    print('Open your application launcher and search for Omarchy Hardware Score.')
     return desktop
 
 
