@@ -1,6 +1,6 @@
 # Marketplace submission candidate
 
-Release: **0.1.0-beta.2**, plugin ID `szaidi.scoring-matrix`, category **Hardware**, tags **bar, quickshell, system**. Proposed issue title: **[Plugin]: Scoring Matrix**.
+Release: **0.1.0-beta.2**, plugin ID `szaidi.scoring-matrix`, category **Hardware**, tags **bar, quickshell, system**. Proposed update issue title: **[Verify]: Omarchy Hardware Score**.
 
 ## Prepared
 
@@ -9,11 +9,11 @@ Release: **0.1.0-beta.2**, plugin ID `szaidi.scoring-matrix`, category **Hardwar
 - HTTPS installation, update and removal instructions, dependencies, data storage and beta limitations.
 - Root `preview.png` shows the actual widget with the anonymous label “This computer”; README displays the same approved image.
 - Release notes in [CHANGELOG.md](../CHANGELOG.md), runtime evidence in [qa.md](qa.md), and issue body in [submission.md](submission.md).
-- Plugin ID absent from the marketplace registry checked September 7, 2026.
+- Plugin ID listed in marketplace registry.
 
 ## Submission status
 
-The repository is public and [submission #5560](https://github.com/omacom/omarchy-plugin-marketplace/issues/5560) is open. The privacy rewrite replaces the previously submitted commit. The issue body will reference the new candidate for review.
+The initial submission [submission #5560](https://github.com/omacom/omarchy-plugin-marketplace/issues/5560) was approved and published. Upstream updates to name and assets use the verification workflow (`[Verify]: Omarchy Hardware Score`).
 
 ## Publication procedure
 
