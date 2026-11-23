@@ -1,6 +1,6 @@
 # Marketplace submission candidate
 
-Release: **0.1.0-beta.2**, plugin ID `szaidi.scoring-matrix`, category **Hardware**, tags **bar, quickshell, system**. Proposed update issue title: **[Verify]: Omarchy Hardware Score**.
+Release: **0.1.0-beta.3**, plugin ID `szaidi.scoring-matrix`, category **Hardware**, tags **bar, quickshell, system**. Proposed update issue title: **[Verify]: Omarchy Hardware Score**.
 
 ## Prepared
 

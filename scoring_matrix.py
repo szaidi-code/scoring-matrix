@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 
-VERSION = '0.1.0-beta.2'
+VERSION = '0.1.0-beta.3'
 MATRIX = '1.0'
 GIB = 1024 ** 3
 MAX_REPORT_BYTES = 2 * 1024 * 1024

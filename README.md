@@ -1,6 +1,6 @@
 # Omarchy Hardware Score
 
-**Beta 0.1.0-beta.2 · MIT licensed.** A local hardware inventory and provisional **Omarchy Score**, with a native Omarchy bar widget and optional terminal application. No cloud service, telemetry, account registration, scheduled scans, or disk benchmarks. Nothing changes your disks or firmware.
+**Beta 0.1.0-beta.3 · MIT licensed.** A local hardware inventory and provisional **Omarchy Score**, with a native Omarchy bar widget and optional terminal application. No cloud service, telemetry, account registration, scheduled scans, or disk benchmarks. Nothing changes your disks or firmware.
 
 ![Omarchy Hardware Score widget showing category scores and evidence coverage](preview.png)
 
@@ -18,7 +18,7 @@ The evidence summary distinguishes complete inventory, missing evidence, unknown
 
 With the panel open, press **R** to rescan or **N** to toggle notes. Arrow keys select a category; **Escape** closes the panel.
 
-The widget follows Omarchy's font family and shared typography scale, including a user `base-size` override in `~/.config/omarchy/shell.toml`. Body text uses the configured base size; headings and score numerals use the shell's proportional type tokens. Panel dimensions, cards, rings and spacing scale with the shell's spacing settings.
+The widget follows Omarchy's font family, shared typography and spacing scale (including a user `base-size` override in `~/.config/omarchy/shell.toml`), reduced-motion setting (`omarchy toggle animations`), and live language, locale, number formatting, and RTL navigation settings via `i18n/en.json`. Body text uses the configured base size; headings and score numerals use the shell's proportional type tokens. Panel dimensions, cards, rings and spacing scale with the shell's spacing settings.
 
 Enable **Scan once per boot** in the widget settings, or run `omarchy bar set szaidi.scoring-matrix scanOnStartup true`. This takes effect when the shell next starts. A validated snapshot from the same boot and disk selection is reused across shell restarts. Set it to `false` to return to manual scans. Hardware scans remain local and read-only. If the boot identity is unavailable, an existing valid report is reused.
 
@@ -34,7 +34,7 @@ omarchy bar set szaidi.scoring-matrix targetDisk ''
 
 The saved score continues to describe its original disk until you rescan. An invalid disk selection reports an error and preserves the previous report.
 
-This native plugin targets the shell API documented in September 2026. The popup has been visually tested on Omarchy 4.0.2; it requires the native shell Panel and KeyboardPanel API. On an older Omarchy without this plugin API, use the application-menu installation.
+This native plugin targets the Omarchy 4.5 native shell plugin API (`Panel`, `KeyboardPanel`, `Style.duration`, `Commons.Translations`, `Commons.I18n`, and `Commons.Util.readingKey`) and has been tested on Omarchy 4.5.0-3. On an older Omarchy without this plugin API, use the application-menu installation.
 
 ## Optional terminal application
 

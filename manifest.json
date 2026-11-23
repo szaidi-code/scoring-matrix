@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "szaidi.scoring-matrix",
   "name": "Omarchy Hardware Score",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "author": "szaidi-code",
   "description": "Local hardware scores with evidence coverage and offline comparisons. Optional scan once per boot; no telemetry.",
   "repository": "https://github.com/szaidi-code/scoring-matrix",

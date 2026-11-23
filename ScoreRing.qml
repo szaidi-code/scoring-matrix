@@ -1,10 +1,12 @@
 import QtQuick
 import qs.Commons
+import qs.Commons as Commons
 
 Item {
   id: ring
   property real value: 0
   property real maximum: 100
+  property string maximumText: "/ " + Commons.I18n.formatNumber(maximum)
   property color accent: "#89b4fa"
   property color track: "#30343b"
   property color foreground: "white"
@@ -12,7 +14,13 @@ Item {
   property int numberSize: Style.font.displayLarge
   property string fontFamily: Style.font.family
   property real progress: Math.max(0, Math.min(1, maximum > 0 ? value / maximum : 0))
-  Behavior on progress { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
+  Behavior on progress {
+    NumberAnimation {
+      duration: Style.duration(240)
+      easing.type: Easing.Bezier
+      easing.bezierCurve: Style.easeOut
+    }
+  }
   onProgressChanged: dial.requestPaint()
   onAccentChanged: dial.requestPaint()
   onTrackChanged: dial.requestPaint()
@@ -36,7 +44,23 @@ Item {
   }
   Column {
     anchors.centerIn: parent
-    Text { anchors.horizontalCenter: parent.horizontalCenter; text: ring.value; color: ring.foreground; font.family: ring.fontFamily; font.pixelSize: ring.numberSize; font.bold: true }
-    Text { anchors.horizontalCenter: parent.horizontalCenter; text: "/ " + ring.maximum; color: ring.foreground; opacity: 0.6; font.family: ring.fontFamily; font.pixelSize: Style.font.bodySmall }
+    Text {
+      anchors.horizontalCenter: parent.horizontalCenter
+      textFormat: Text.PlainText
+      text: Commons.I18n.formatNumber(ring.value)
+      color: ring.foreground
+      font.family: ring.fontFamily
+      font.pixelSize: ring.numberSize
+      font.bold: true
+    }
+    Text {
+      anchors.horizontalCenter: parent.horizontalCenter
+      textFormat: Text.PlainText
+      text: ring.maximumText
+      color: ring.foreground
+      opacity: 0.6
+      font.family: ring.fontFamily
+      font.pixelSize: Style.font.bodySmall
+    }
   }
 }
