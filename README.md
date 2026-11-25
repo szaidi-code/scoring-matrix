@@ -1,8 +1,8 @@
 # Omarchy Hardware Score
 
-**Beta 0.1.0-beta.3 · MIT licensed.** A local hardware inventory and provisional **Omarchy Score**, with a native Omarchy bar widget and optional terminal application. No cloud service, telemetry, account registration, scheduled scans, or disk benchmarks. Nothing changes your disks or firmware.
+**0.1.0 · MIT licensed.** A local hardware inventory, provisional **Omarchy Score**, and readiness advisor, with a native Omarchy bar widget and optional terminal application. No cloud service, telemetry, account registration, or disk benchmarks. Scans are manual by default; optional once-per-boot scanning is user-controlled. Nothing changes your disks or firmware.
 
-![Omarchy Hardware Score widget showing category scores and evidence coverage](preview.png)
+![Omarchy Hardware Score widget showing the provisional score, category cards, actionable advice, and workload profiles](preview.png)
 
 ## Install the Omarchy widget
 
@@ -15,6 +15,14 @@ omarchy plugin add https://github.com/szaidi-code/scoring-matrix --enable
 The **Score** bar button opens a native Omarchy popup with an animated total score, six clickable category cards, scoring explanations, and notes. The bar shows the most recently loaded score. Opening the popup reads the latest valid local report without scanning; **Rescan** performs a read-only scan and saves a new report. Arrow keys move between categories, Tab reaches controls, and Escape or clicking outside closes the popup. Plugin id: `szaidi.scoring-matrix`. By default, it starts no scanner until you request a scan. The popup uses the same shell panel components as the built-in network panel and follows the current theme. The separate terminal launcher supports Ghostty, foot, Alacritty, kitty, or xterm. The optional terminal application below works separately. Native plugin add does not run `install.py`; run that separately if you want both.
 
 The evidence summary distinguishes complete inventory, missing evidence, unknown architecture, and guest resources. “Observed” means inventory was collected, not that the hardware passed a functional test. Colors and the bar button follow the active Omarchy theme. Saved snapshots are validated before display; full PCI and peripheral inventory stays in the report file instead of being sent to the shell.
+
+The advisor adds:
+
+- **Advice:** actionable inventory-based next steps and advisory workload profiles for everyday use, development, containers, and gaming/local AI. Profiles do not change the v1 score or establish application compatibility.
+- **Checks:** manually record pass, fail, or untested for graphics acceleration, Wi-Fi, Bluetooth, audio, suspend/resume and external displays. Entries include a date and are marked for retesting after a detected hardware, driver, or kernel change. Rescan after changes; these are user reports, not automated tests.
+- **History & tools:** compare the latest snapshot with the previous snapshot for the same computer label; run an optional short, single-threaded CPU test; or export a redacted summary. The CPU test runs three PBKDF2-SHA256 samples and records the median time (lower is faster); system load, power settings, Python and cryptographic libraries affect results. It does not change the score or benchmark disks.
+
+The export excludes computer labels, device IDs, disk paths, raw inventory and free-form notes, but scores and check results may still be identifying. Review it before sharing. All advisor data stays local; `.advisor.json` is stored beside the reports. Exported summaries are saved in the reports directory's `exports` subdirectory.
 
 With the panel open, press **R** to rescan or **N** to toggle notes. Arrow keys select a category; **Escape** closes the panel.
 
@@ -34,7 +42,7 @@ omarchy bar set szaidi.scoring-matrix targetDisk ''
 
 The saved score continues to describe its original disk until you rescan. An invalid disk selection reports an error and preserves the previous report.
 
-This native plugin targets the Omarchy 4.5 native shell plugin API (`Panel`, `KeyboardPanel`, `Style.duration`, `Commons.Translations`, `Commons.I18n`, and `Commons.Util.readingKey`) and has been tested on Omarchy 4.5.0-3. On an older Omarchy without this plugin API, use the application-menu installation.
+This native plugin targets the Omarchy 4.5 native shell plugin API (`Panel`, `KeyboardPanel`, `Style.duration`, `Commons.Translations`, `Commons.I18n`, and `Commons.Util.readingKey`). The previous beta release was tested on Omarchy 4.5.0-3. On an older Omarchy without this plugin API, use the application-menu installation.
 
 ## Optional terminal application
 
@@ -65,7 +73,15 @@ python3 scoring_matrix.py
 python3 scoring_matrix.py --target-disk /dev/nvme1n1 --label office-pc
 python3 scoring_matrix.py --secure-boot-reported enabled
 python3 scoring_matrix.py --compare ./fleet
+python3 scoring_matrix.py --compare-reports ./old.json ./new.json
+python3 scoring_matrix.py --advisor
+python3 scoring_matrix.py --profile containers
+python3 scoring_matrix.py --set-check wifi pass
+python3 scoring_matrix.py --benchmark-cpu
+python3 scoring_matrix.py --export-redacted
 ```
+
+For `--set-check`, the check is one of `graphics`, `wifi`, `bluetooth`, `audio`, `suspend`, or `displays`; the result is `pass`, `fail`, or `untested`. Advisor actions use the latest valid saved report; scan first. `--compare-reports` presents two v1 reports side by side, including changes when their computer labels match. Checks are stored separately per exact computer label; comparisons show the latest local checks, not their historical state at capture time. Copied reports do not include checks, so they appear as unavailable unless the corresponding local advisor data is present. These comparisons do not prove measured performance.
 
 Linux reports are saved in `$XDG_STATE_HOME/scoring-matrix/reports` (default `~/.local/state/scoring-matrix/reports`), with local JSON and detailed text files. `--output DIRECTORY` changes the destination. Reports contain hardware IDs and computer labels; review before sharing. No reports or real-device fixtures are committed to this repository.
 
@@ -95,14 +111,16 @@ omarchy plugin update szaidi.scoring-matrix
 omarchy plugin remove szaidi.scoring-matrix
 ```
 
-## Beta checks
+## Validation
 
 ```bash
 python3 -m unittest discover -s tests -v
 omarchy plugin validate .
+python3 scoring_matrix.py --output /tmp/scoring-matrix-test
+python3 scoring_matrix.py --output /tmp/scoring-matrix-test --advisor
 ```
 
-Try menu launch, default/explicit disk selection, saved reports, offline comparisons, Secure Boot provenance, suspend/resume, audio, Bluetooth and external displays. This is a beta: scores describe observed inventory, not tested hardware performance or installation certification.
+The score is still an inventory estimate, not measured performance or installation certification. Manually verify graphics, Wi-Fi, Bluetooth, audio, suspend/resume and external displays on each target system. Review local exports before sharing.
 
 See [the comparison and design review](docs/plugin-review.md) and [publication preparation](docs/publication.md) for the implementation rationale and remaining release decisions.
 

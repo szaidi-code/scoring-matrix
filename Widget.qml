@@ -14,17 +14,30 @@ Panel {
   property var report: null
   property int selected: 0
   property bool showNotes: false
+  property string actionMessage: ""
+  property var actionCommand: []
+  property string advisorTab: "overview"
   property string errorKey: ""
   property string errorDetail: ""
   readonly property string errorMessage: errorDetail !== "" ? errorDetail : (errorKey !== "" ? strings.t(errorKey) : "")
   readonly property string script: decodeURIComponent(Qt.resolvedUrl("scoring_matrix.py").toString().replace(/^file:\/\//, ""))
-  readonly property bool busy: scan.running || saved.running || bootReport.running
+  readonly property bool busy: scan.running || saved.running || bootReport.running || advisorAction.running
   readonly property var categories: report ? report.Breakdown : []
+  readonly property var advice: report && report.Advisor ? report.Advisor : null
   readonly property var current: categories.length > selected ? categories[selected] : null
-  readonly property var accents: [Color.accent, Color.accent, Color.accent, Color.accent, Color.accent, Color.accent]
+  readonly property var accents: [Commons.Color.accent, Commons.Color.accent, Commons.Color.accent, Commons.Color.accent, Commons.Color.accent, Commons.Color.accent]
   readonly property string targetDisk: String(root.setting("targetDisk", "")).trim()
   readonly property var categoryKeys: ["cpu", "memory", "disk", "graphics", "network", "firmware"]
   readonly property var formatLocale: Qt.locale(Commons.I18n.formatLocale)
+  readonly property var checkNames: ({
+    graphics: strings.t("advisor.check.graphics"), wifi: strings.t("advisor.check.wifi"),
+    bluetooth: strings.t("advisor.check.bluetooth"), audio: strings.t("advisor.check.audio"),
+    suspend: strings.t("advisor.check.suspend"), displays: strings.t("advisor.check.displays")
+  })
+  readonly property var resultNames: ({
+    pass: strings.t("advisor.result.pass"), fail: strings.t("advisor.result.fail"),
+    untested: strings.t("advisor.result.untested")
+  })
 
   Commons.Translations {
     id: strings
@@ -86,14 +99,27 @@ Panel {
         }
       }
       root.report = value
-      root.clearError()
+      root.actionMessage = value && value.Message ? value.Message : ""
+      if (value && value.AdvisorError) {
+        root.errorKey = ""
+        root.errorDetail = root.plainText(value.AdvisorError, 300)
+      } else {
+        root.clearError()
+      }
     } catch (e) { root.setErrorKey("error.readSaved") }
   }
 
   function refresh() {
     if (!root.busy) { root.clearError(); scan.running = true }
   }
-
+  function runAdvisor(args) {
+    if (!root.busy) {
+      root.clearError()
+      root.actionMessage = ""
+      root.actionCommand = ["python3", root.script].concat(args, ["--view-json"])
+      advisorAction.running = true
+    }
+  }
   onOpenedChanged: if (opened && !busy) saved.running = true
   Component.onCompleted: {
     if (root.setting("scanOnStartup", false)) bootReport.running = true
@@ -101,7 +127,7 @@ Panel {
   }
   implicitWidth: trigger.implicitWidth
   implicitHeight: trigger.implicitHeight
-  Component.onDestruction: { scan.running = false; saved.running = false; bootReport.running = false }
+  Component.onDestruction: { scan.running = false; saved.running = false; bootReport.running = false; advisorAction.running = false }
 
   WidgetButton {
     id: trigger
@@ -132,6 +158,13 @@ Panel {
     onExited: function(code, status) { if (code !== 0) root.setErrorKey("error.loadSaved") }
   }
   Process {
+    id: advisorAction
+    command: root.actionCommand
+    stdout: StdioCollector { onStreamFinished: if (text.trim()) root.acceptReport(text) }
+    stderr: StdioCollector { onStreamFinished: if (text.trim()) root.setStderrError(text) }
+    onExited: function(code, status) { if (code !== 0 && root.errorMessage === "") root.setErrorKey("error.advisorFailed") }
+  }
+  Process {
     id: scan
     command: ["python3", root.script, "--view-json"].concat(root.targetDisk ? ["--target-disk", root.targetDisk] : [])
     stdout: StdioCollector { onStreamFinished: if (text.trim()) root.acceptReport(text) }
@@ -153,6 +186,11 @@ Panel {
     running: bootReport.running
     onTriggered: { bootReport.signal(9); root.setErrorKey("error.startupTimeout") }
   }
+  Timer {
+    interval: 120000
+    running: advisorAction.running
+    onTriggered: { advisorAction.signal(9); root.setErrorKey("error.advisorTimeout") }
+  }
 
   Timer {
     interval: 10000
@@ -166,7 +204,7 @@ Panel {
   }
 
   component Label: Text {
-    color: Color.popups.text
+    color: Commons.Color.popups.text
     font.pixelSize: Style.font.body
     font.family: root.bar ? root.bar.fontFamily : Style.font.family
     textFormat: Text.PlainText
@@ -179,8 +217,8 @@ Panel {
     contentItem: Label { text: action.text; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; opacity: action.enabled ? 1 : 0.5 }
     background: Rectangle {
       radius: Style.space(8)
-      color: Qt.alpha(Color.popups.text, action.hovered ? 0.12 : 0.05)
-      border.color: action.activeFocus ? Color.accent : Qt.alpha(Color.popups.text, 0.14)
+      color: Qt.alpha(Commons.Color.popups.text, action.hovered ? 0.12 : 0.05)
+      border.color: action.activeFocus ? Commons.Color.accent : Qt.alpha(Commons.Color.popups.text, 0.14)
     }
   }
 
@@ -238,8 +276,8 @@ Panel {
             Layout.fillWidth: true
             implicitHeight: Math.max(Style.space(132), hero.implicitHeight + Style.space(28))
             radius: Style.space(12)
-            color: Qt.alpha(Color.accent, 0.07)
-            border.color: Qt.alpha(Color.accent, 0.2)
+            color: Qt.alpha(Commons.Color.accent, 0.07)
+            border.color: Qt.alpha(Commons.Color.accent, 0.2)
             RowLayout {
               id: hero
               anchors.fill: parent
@@ -250,7 +288,7 @@ Panel {
                 fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
                 value: root.report ? root.report.Score : 0
                 maximumText: strings.t("ring.maximum").arg(Commons.I18n.formatNumber(100))
-                accent: Color.accent; foreground: Color.popups.text; track: Qt.alpha(Color.popups.text, 0.09)
+                accent: Commons.Color.accent; foreground: Commons.Color.popups.text; track: Qt.alpha(Commons.Color.popups.text, 0.09)
               }
               ColumnLayout {
                 Layout.fillWidth: true
@@ -264,6 +302,8 @@ Panel {
                         .arg(Commons.I18n.formatNumber(70))
                         .arg(Commons.I18n.formatNumber(root.report.Compatibility))
                         .arg(Commons.I18n.formatNumber(30))
+                        .arg(Commons.I18n.formatNumber(root.report.Coverage))
+                        .arg(Commons.I18n.formatNumber(100))
                     : strings.t("hero.emptyPrompt")
                   lineHeight: 1.25
                 }
@@ -292,6 +332,110 @@ Panel {
             }
             Label { Layout.fillWidth: true; text: root.report ? root.report.Assessment.Detail : ""; font.pixelSize: Style.font.body; opacity: 0.8 }
           }
+          RowLayout {
+            Layout.fillWidth: true
+            visible: !!root.advice
+            Repeater {
+              model: [{key: "overview", label: strings.t("advisor.tab.advice")}, {key: "checks", label: strings.t("advisor.tab.checks")}, {key: "history", label: strings.t("advisor.tab.history")}]
+              delegate: Action {
+                required property var modelData
+                Layout.fillWidth: true
+                text: modelData.label
+                opacity: root.advisorTab === modelData.key ? 1 : 0.65
+                onClicked: root.advisorTab = modelData.key
+              }
+            }
+          }
+          ColumnLayout {
+            Layout.fillWidth: true
+            visible: !!root.advice && root.advisorTab === "overview"
+            spacing: Style.space(7)
+            Label { text: strings.t("advisor.nextSteps"); font.bold: true; color: Commons.Color.accent }
+            Repeater {
+              model: root.advice ? root.advice.Recommendations : []
+              Label { required property var modelData; Layout.fillWidth: true; text: "• " + modelData }
+            }
+            Label { text: strings.t("advisor.workload"); font.bold: true; color: Commons.Color.accent }
+            Flow {
+              Layout.fillWidth: true
+              spacing: Style.space(6)
+              Repeater {
+                model: [{key: "everyday", label: strings.t("advisor.profile.everyday")}, {key: "development", label: strings.t("advisor.profile.development")}, {key: "containers", label: strings.t("advisor.profile.containers")}, {key: "gaming-ai", label: strings.t("advisor.profile.gamingAi")}]
+                delegate: Action {
+                  required property var modelData
+                  text: modelData.label + (root.advice && root.advice.Profile === modelData.key ? " ✓" : "")
+                  enabled: !root.busy
+                  onClicked: root.runAdvisor(["--profile", modelData.key])
+                }
+              }
+            }
+            Label { Layout.fillWidth: true; text: root.advice ? root.advice.ProfileGuidance : ""; opacity: 0.8 }
+            Label { Layout.fillWidth: true; text: strings.t("advisor.profileNote"); font.pixelSize: Style.font.caption; opacity: 0.65 }
+          }
+          ColumnLayout {
+            Layout.fillWidth: true
+            visible: !!root.advice && root.advisorTab === "checks"
+            spacing: Style.space(8)
+            Label { Layout.fillWidth: true; text: strings.t("advisor.checksTitle"); font.bold: true; color: Commons.Color.accent }
+            Label { Layout.fillWidth: true; text: strings.t("advisor.checksNote"); opacity: 0.8 }
+            Repeater {
+              model: root.advice ? root.advice.Checks : []
+              delegate: ColumnLayout {
+                id: checkRow
+                required property var modelData
+                Layout.fillWidth: true
+                Label {
+                  Layout.fillWidth: true
+                  text: root.checkNames[modelData.Key] + " · " + (modelData.Stale ? strings.t("advisor.retest") : root.resultNames[modelData.Result]) +
+                        (modelData.Captured ? " · " + root.formatCaptured(modelData.Captured) : "")
+                }
+                Label {
+                  Layout.fillWidth: true
+                  visible: !!modelData.Environment
+                  text: modelData.Environment || ""
+                  font.pixelSize: Style.font.caption
+                  opacity: 0.65
+                }
+                RowLayout {
+                  Layout.fillWidth: true
+                  Repeater {
+                    model: [{key: "pass", label: strings.t("advisor.result.pass")}, {key: "fail", label: strings.t("advisor.result.fail")}, {key: "untested", label: strings.t("advisor.result.untested")}]
+                    delegate: Action {
+                      required property var modelData
+                      Layout.fillWidth: true
+                      text: modelData.label
+                      enabled: !root.busy
+                      onClicked: root.runAdvisor(["--set-check", checkRow.modelData.Key, modelData.key])
+                    }
+                  }
+                }
+              }
+            }
+          }
+          ColumnLayout {
+            Layout.fillWidth: true
+            visible: !!root.advice && root.advisorTab === "history"
+            spacing: Style.space(8)
+            Label { text: strings.t("advisor.historyTitle"); font.bold: true; color: Commons.Color.accent }
+            Label { Layout.fillWidth: true; text: root.advice && root.advice.PreviousCaptured ? strings.t("advisor.comparedWith").arg(root.formatCaptured(root.advice.PreviousCaptured)) : strings.t("advisor.noHistory") }
+            Repeater {
+              model: root.advice ? root.advice.Changes : []
+              Label { required property var modelData; Layout.fillWidth: true; text: "• " + modelData }
+            }
+            Label { text: strings.t("advisor.benchmarkTitle"); font.bold: true; color: Commons.Color.accent }
+            Label {
+              Layout.fillWidth: true
+              text: root.advice && root.advice.Benchmark ? strings.t("advisor.benchmarkResult")
+                    .arg(root.advice.Benchmark.MedianSeconds.toLocaleString(root.formatLocale, 'f', 3))
+                    .arg(root.formatCaptured(root.advice.Benchmark.Captured)) +
+                    (root.advice.Benchmark.Stale ? strings.t("advisor.systemChanged") : "") : strings.t("advisor.notRun")
+            }
+            Label { Layout.fillWidth: true; text: strings.t("advisor.benchmarkNote"); font.pixelSize: Style.font.caption; opacity: 0.75 }
+            Action { Layout.fillWidth: true; text: strings.t("advisor.runBenchmark"); enabled: !root.busy; onClicked: root.runAdvisor(["--benchmark-cpu"]) }
+            Label { text: strings.t("advisor.exportTitle"); font.bold: true; color: Commons.Color.accent }
+            Label { Layout.fillWidth: true; text: strings.t("advisor.exportNote"); font.pixelSize: Style.font.caption; opacity: 0.75 }
+            Action { Layout.fillWidth: true; text: strings.t("advisor.export"); enabled: !root.busy; onClicked: root.runAdvisor(["--export-redacted"]) }
+          }
           Label { text: strings.t("grid.prompt"); font.pixelSize: Style.font.caption; font.letterSpacing: Style.spaceReal(1); opacity: 0.6; visible: !!root.report }
           GridLayout {
             id: categoryGrid
@@ -319,7 +463,7 @@ Panel {
                   radius: Style.space(10)
                   color: Qt.alpha(root.accents[tile.index], root.selected === tile.index ? 0.14 : tile.hovered ? 0.09 : 0.035)
                   border.width: root.selected === tile.index || tile.activeFocus ? 2 : 1
-                  border.color: root.selected === tile.index || tile.activeFocus ? root.accents[tile.index] : Qt.alpha(Color.popups.text, 0.12)
+                  border.color: root.selected === tile.index || tile.activeFocus ? root.accents[tile.index] : Qt.alpha(Commons.Color.popups.text, 0.12)
                   Behavior on color { ColorAnimation { duration: Style.duration(120); easing.type: Easing.OutCubic } }
                 }
                 contentItem: Column {
@@ -330,7 +474,7 @@ Panel {
                     fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
                     value: tile.modelData.Points; maximum: tile.modelData.Maximum
                     maximumText: strings.t("ring.maximum").arg(Commons.I18n.formatNumber(tile.modelData.Maximum))
-                    accent: root.accents[tile.index]; foreground: Color.popups.text; track: Qt.alpha(Color.popups.text, 0.08)
+                    accent: root.accents[tile.index]; foreground: Commons.Color.popups.text; track: Qt.alpha(Commons.Color.popups.text, 0.08)
                   }
                   Label {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -392,7 +536,7 @@ Panel {
                 Layout.fillWidth: true
                 visible: !!root.current && !root.current.Known
                 text: strings.t("detail.missingEvidence")
-                color: Color.urgent
+                color: Commons.Color.urgent
                 font.pixelSize: Style.font.body
               }
             }
@@ -403,7 +547,8 @@ Panel {
             text: root.report ? root.report.Issues.map(function(note) { return "• " + note }).join("\n\n") : ""
             font.pixelSize: Style.font.body
           }
-          Label { Layout.fillWidth: true; visible: root.errorMessage !== ""; text: root.errorMessage; color: Color.urgent; font.pixelSize: Style.font.body }
+          Label { Layout.fillWidth: true; visible: root.errorMessage !== ""; text: root.errorMessage; color: Commons.Color.urgent; font.pixelSize: Style.font.body }
+          Label { Layout.fillWidth: true; visible: root.actionMessage !== ""; text: root.actionMessage; color: Commons.Color.accent; font.pixelSize: Style.font.body }
           RowLayout {
             Layout.fillWidth: true
             Action {

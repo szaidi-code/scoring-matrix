@@ -49,7 +49,7 @@ Peripheral inventory provides context without awarding points for device count. 
 
 Boot a recent Linux live environment to identify devices and test Wi-Fi/Bluetooth, audio, camera, input devices, and suspend/resume. A successful test on another distribution is supporting evidence, not proof for Omarchy. Verify the intended Omarchy/Hyprland stack on a spare disk or test installation for accelerated graphics, external displays, scaling, and suspend. Record exact PCI/USB IDs and kernel/driver versions when investigating failures. Prefer the highest-resource machine whose required functions actually pass.
 
-Future v2: measured CPU/storage benchmarks and recorded pass/fail compatibility tests. Recalibrate weights and version the matrix before comparing those results to this v1 preflight. Any future scoring changes must use a new matrix version before their reports are compared.
+The optional advisor records pass/fail checks and a single-threaded CPU measurement separately from this v1 score. It does not award functional points or measure storage. A future scoring matrix incorporating measured performance or compatibility tests would require recalibrated weights and a new matrix version before comparisons.
 
 ## Sources checked September 7, 2026
 

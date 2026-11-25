@@ -16,9 +16,9 @@ _No response_
 
 ### Maintainer notes
 
-Omarchy Hardware Score 0.1.0-beta.3 is a native Omarchy bar widget for local hardware inventory and provisional capacity and compatibility scores. It provides six category cards, evidence summaries, explanations, saved snapshots and offline comparisons. It follows the shell's font, theme, reduced-motion, and language/locale settings.
+Omarchy Hardware Score 0.1.0 is a native Omarchy bar widget for local hardware inventory and provisional capacity and compatibility estimates. It provides six category cards, evidence summaries, explanations, saved snapshots, offline comparisons, workload guidance, user-recorded compatibility checks, an optional CPU microbenchmark and redacted export. It follows the shell's font, theme, reduced-motion, and language/locale settings.
 
-Requires the native Omarchy shell plugin API (tested on Omarchy 4.5.0-3), Python 3.9+ and util-linux. Optional pciutils and usbutils improve inventory names. No telemetry, network calls from the collector, sudo, disk benchmarks, or firmware changes. Optional scan once per boot is disabled by default and serialized across multiple displays. Reports stay under the user's XDG state directory and are preserved on removal.
+Requires the native Omarchy shell plugin API (beta baseline tested on Omarchy 4.5.0-3), Python 3.9+ and util-linux. Optional pciutils and usbutils improve inventory names. No telemetry, network calls from the collector, sudo, disk benchmarks, or firmware changes. Optional scan once per boot is disabled by default and serialized across multiple displays. Reports stay under the user's XDG state directory and are preserved on removal. Complete target-hardware compatibility checks before relying on an installation recommendation.
 
 MIT licensed. The root preview shows the actual widget with an anonymous computer label. The optional terminal application installer is separate from plugin installation. Matrix 1.0 is an inventory estimate, not a performance benchmark or certification.
 

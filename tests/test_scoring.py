@@ -86,9 +86,12 @@ class ScoringTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='scoring test ') as tmp:
             desktop = installer.install(tmp, ROOT)
             self.assertIn('--menu', desktop.read_text())
+            self.assertEqual((Path(tmp)/'scoring-matrix/advisor.py').read_text(),
+                             (ROOT/'advisor.py').read_text())
             self.assertEqual((Path(tmp)/'scoring-matrix/LICENSE').read_text(), (ROOT/'LICENSE').read_text())
             self.assertEqual(json.loads((Path(tmp)/'scoring-matrix/installation.json').read_text())['version'], sm.VERSION)
             self.assertIn('Terminal=true', desktop.read_text())
+            self.assertIn('Categories=System;', desktop.read_text())
             installer.install(tmp, ROOT)
             extra = Path(tmp)/'scoring-matrix/user-note.txt'
             extra.write_text('keep')
@@ -133,6 +136,21 @@ class ScoringTests(unittest.TestCase):
             invalid['Score'] += 1
             (folder/'bad-total.json').write_text(json.dumps(invalid))
             self.assertEqual(sm.latest_report(folder)['Computer'], 'newer')
+
+    def test_shell_payload_is_allowlisted_and_dynamic_text_is_bounded(self):
+        report = sm.score(fixture(), 'example')
+        report['UntrustedExtra'] = 'do not send this to the shell'
+        payload = sm.view_report(report)
+        self.assertNotIn('UntrustedExtra', payload)
+        self.assertNotIn('PCI', payload['Inventory'])
+        oversized = copy.deepcopy(report)
+        oversized['Computer'] = 'x' * 257
+        with self.assertRaisesRegex(ValueError, 'Computer length'):
+            sm.view_report(oversized)
+        oversized = copy.deepcopy(report)
+        oversized['Breakdown'][0]['Reason'] = 'x' * 16385
+        with self.assertRaisesRegex(ValueError, 'CPU category'):
+            sm.view_report(oversized)
 
 
 if __name__ == '__main__':

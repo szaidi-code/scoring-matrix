@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scoring Matrix beta. Standard-library-only, offline Linux collector."""
+"""Scoring Matrix. Standard-library-only, offline Linux collector."""
 import argparse
 import datetime as dt
 import json
@@ -12,7 +12,9 @@ import subprocess
 import sys
 import tempfile
 
-VERSION = '0.1.0-beta.3'
+import advisor
+
+VERSION = '0.1.0'
 MATRIX = '1.0'
 GIB = 1024 ** 3
 MAX_REPORT_BYTES = 2 * 1024 * 1024
@@ -242,9 +244,11 @@ def validate_report(report):
 
     if not isinstance(report, dict) or report.get('MatrixVersion') != MATRIX:
         raise ValueError('Incompatible or missing matrix version')
-    for field in ('Computer', 'Captured', 'Status'):
+    for field, maximum in (('Computer', 256), ('Captured', 64), ('Status', 512)):
         if not isinstance(report.get(field), str) or not report[field].strip():
             raise ValueError(f'Missing or invalid {field}')
+        if len(report[field]) > maximum:
+            raise ValueError(f'Invalid {field} length')
     try:
         captured = dt.datetime.fromisoformat(report['Captured'].replace('Z', '+00:00'))
     except ValueError as exc:
@@ -259,7 +263,8 @@ def validate_report(report):
                 or not number(part.get('Maximum'), maximum) or part['Maximum'] != maximum
                 or not number(part.get('Points'), ceiling)
                 or type(part.get('Known')) is not bool
-                or not isinstance(part.get('Reason'), str)):
+                or not isinstance(part.get('Reason'), str)
+                or len(part['Reason']) > 16384):
             raise ValueError(f'Invalid {category} category')
     expected = dict(Score=sum(p['Points'] for p in parts),
                     Resources=sum(p['Points'] for p in parts[:3]),
@@ -270,8 +275,12 @@ def validate_report(report):
             raise ValueError(f'Invalid {field} total')
     if (not isinstance(report.get('Inventory'), dict)
             or not isinstance(report.get('Issues'), list)
-            or not all(isinstance(note, str) for note in report['Issues'])):
+            or len(report['Issues']) > 128
+            or not all(isinstance(note, str) and len(note) <= 4096 for note in report['Issues'])):
         raise ValueError('Invalid inventory or notes')
+    if ('AppVersion' in report
+            and (not isinstance(report['AppVersion'], str) or len(report['AppVersion']) > 64)):
+        raise ValueError('Invalid application version')
     return captured
 
 
@@ -316,15 +325,90 @@ def view_report(report):
     if report is None:
         return None
     validate_report(report)
-    return dict((key, value) for key, value in report.items() if key != 'Inventory') | {
+    fields = ('MatrixVersion', 'AppVersion', 'Computer', 'Captured', 'Score', 'Resources',
+              'Compatibility', 'Coverage', 'Status', 'SecureBootSource', 'ScanBootId',
+              'ScanTargetDisk', 'Breakdown', 'Issues')
+    return {key: report[key] for key in fields if key in report} | {
         'Inventory': {'Virtualized': bool(report['Inventory'].get('Virtualized'))},
         'Assessment': assessment(report)}
+
+
+def previous_report(directory, report):
+    """Find an earlier valid snapshot for the same exact computer label."""
+    captured = validate_report(report)
+    candidates = []
+    for path in Path(directory).glob('*.json'):
+        if path.name.startswith('.'):
+            continue
+        try:
+            candidate = read_report(path)
+            when = validate_report(candidate)
+            if candidate['Computer'] == report['Computer'] and when < captured:
+                candidates.append((when, path.name, candidate))
+        except (OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
+            continue
+    return max(candidates, key=lambda item: item[:2])[2] if candidates else None
+
+
+def advisor_view(report, directory, message=None):
+    if report is None:
+        return None
+    payload = view_report(report)
+    try:
+        payload['Advisor'] = advisor.summary(report, advisor.load_state(directory),
+                                             previous_report(directory, report))
+    except (OSError, ValueError, TypeError, RecursionError) as exc:
+        payload['AdvisorError'] = f'Local advisor data unavailable: {exc}'
+    if message:
+        payload['Message'] = message
+    return payload
+
+
+def compare_reports(first, second):
+    left, right = read_report(first), read_report(second)
+    lines = ['Side-by-side matrix 1.0 estimates; not measured performance or compatibility.',
+             f"Left: {left['Computer']} ({left['Captured']})",
+             f"Right: {right['Computer']} ({right['Captured']})",
+             'Category       Left     Right']
+    for a, b in zip(left['Breakdown'], right['Breakdown']):
+        lines.append(f"{a['Category']:12} {a['Points']:2g}/{a['Maximum']:<2g}    {b['Points']:2g}/{b['Maximum']:<2g}")
+    lines.append(f"Total        {left['Score']:2g}/100   {right['Score']:2g}/100")
+    lines.append(f"Evidence     {left['Coverage']:2g}/100   {right['Coverage']:2g}/100")
+    lines.append(f"Left: {assessment(left)['Title']} | Right: {assessment(right)['Title']}")
+    def local_advisor_state(path):
+        try:
+            return advisor.load_state(Path(path).parent), None
+        except (OSError, ValueError, TypeError, RecursionError) as exc:
+            return {'Version': 2, 'Profile': 'everyday', 'Machines': {}}, str(exc)
+
+    left_state, left_error = local_advisor_state(first)
+    right_state, right_error = local_advisor_state(second)
+    left_checks = advisor.summary(left, left_state)['Checks']
+    right_checks = advisor.summary(right, right_state)['Checks']
+    lines.extend(['', 'Latest local manual checks (left / right; not snapshot history):'])
+    for a, b in zip(left_checks, right_checks):
+        def display(item, state, report, error):
+            if error:
+                return 'advisor data unavailable'
+            if report['Computer'] not in state['Machines']:
+                return 'not available'
+            return item['Result'] + (' (retest)' if item['Stale'] else '')
+        lines.append(f"{a['Label']}: {display(a, left_state, left, left_error)} / {display(b, right_state, right, right_error)}")
+    if left_error or right_error:
+        lines.append('Advisor sidecar warning: ' + '; '.join(
+            error for error in (left_error, right_error) if error))
+    lines.append('Checks are local sidecar data, not included in copied matrix reports.')
+    if left['Computer'] == right['Computer']:
+        lines.extend(['', 'Changes (left to right):'] + advisor.changes(left, right))
+    return '\n'.join(lines)
 
 
 def latest_report(directory):
     """Read the latest compatible snapshot without scanning or changing files."""
     candidates = []
     for path in Path(directory).glob('*.json'):
+        if path.name.startswith('.'):
+            continue
         try:
             report = read_report(path)
             captured = validate_report(report)
@@ -398,6 +482,8 @@ def save(report, directory):
 def compare(directory):
     newest = {}
     for path in Path(directory).glob('*.json'):
+        if path.name.startswith('.'):
+            continue
         try:
             r = read_report(path)
         except (ValueError, RecursionError) as exc:
@@ -422,7 +508,7 @@ def compare(directory):
 
 def menu():
     while True:
-        print('\nSCORING MATRIX | beta\n1  Score this computer\n2  Score a specific disk\n3  Compare computer reports\n4  Open reports folder\n5  View scoring matrix\n0  Exit')
+        print(f'\nSCORING MATRIX | {VERSION}\n1  Score this computer\n2  Score a specific disk\n3  Compare computer reports\n4  Open reports folder\n5  View scoring matrix\n0  Exit')
         choice = input('Choose: ').strip()
         try:
             if choice == '0':
@@ -464,6 +550,14 @@ def main():
     parser.add_argument('--secure-boot-reported', choices=['unknown', 'enabled', 'disabled'], default='unknown')
     parser.add_argument('--output', type=Path, default=report_dir())
     parser.add_argument('--compare', type=Path)
+    parser.add_argument('--compare-reports', type=Path, nargs=2, metavar=('LEFT', 'RIGHT'),
+                        help='Compare two saved snapshots side by side')
+    parser.add_argument('--advisor', action='store_true', help='Show guidance for the latest snapshot')
+    parser.add_argument('--profile', choices=advisor.PROFILES, help='Set the local workload profile')
+    parser.add_argument('--set-check', nargs=2, metavar=('CHECK', 'RESULT'),
+                        help='Record a manual compatibility check (pass, fail, or untested)')
+    parser.add_argument('--benchmark-cpu', action='store_true', help='Run an opt-in single-threaded CPU test')
+    parser.add_argument('--export-redacted', action='store_true', help='Save a redacted summary for review')
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--latest-json', action='store_true',
                         help='Read the latest valid saved report as JSON; does not scan')
@@ -473,12 +567,50 @@ def main():
     parser.add_argument('--version', action='version', version=VERSION)
     args = parser.parse_args()
     try:
-        if args.latest_json:
+        if args.compare_reports:
+            print(compare_reports(*args.compare_reports))
+        elif args.advisor or args.profile or args.set_check or args.benchmark_cpu or args.export_redacted:
             report = latest_report(args.output)
-            print(json.dumps(view_report(report) if args.view_json else report))
+            if report is None:
+                raise ValueError('No saved report found. Scan this computer first.')
+            message = None
+            if args.profile:
+                advisor.set_profile(args.output, args.profile)
+                message = 'Workload profile saved.'
+            if args.set_check:
+                advisor.set_check(args.output, report, *args.set_check)
+                message = 'Manual compatibility check saved.'
+            if args.benchmark_cpu:
+                advisor.run_cpu_benchmark(args.output, report)
+                message = 'CPU benchmark saved.'
+            if args.export_redacted:
+                path = advisor.export_redacted(args.output, report, advisor.load_state(args.output))
+                message = 'Redacted summary saved: ' + str(path)
+            payload = advisor_view(report, args.output, message)
+            if payload.get('AdvisorError') and not (args.view_json or args.json):
+                raise ValueError(payload['AdvisorError'])
+            if args.view_json or args.json:
+                print(json.dumps(payload))
+            else:
+                info = payload['Advisor']
+                print((message + '\n\n' if message else '') +
+                      f"Profile: {info['ProfileLabel']}\n{info['ProfileGuidance']}\n\n" +
+                      'Recommendations:\n' + '\n'.join('- ' + item for item in info['Recommendations']) +
+                      '\n\nManual checks:\n' + '\n'.join(
+                          f"- {item['Label']}: {item['Result']}" + (' (stale; retest)' if item['Stale'] else '')
+                          for item in info['Checks']) +
+                      '\n\nPrevious snapshot: ' + (info['PreviousCaptured'] or 'none') +
+                      ('\n' + '\n'.join('- ' + item for item in info['Changes']) if info['Changes'] else '') +
+                      '\n\nCPU benchmark: ' +
+                      (f"{info['Benchmark']['MedianSeconds']:.3f}s median" +
+                       (' (context changed)' if info['Benchmark']['Stale'] else '')
+                       if info['Benchmark'] else 'not run'))
+        elif args.latest_json:
+            report = latest_report(args.output)
+            print(json.dumps(advisor_view(report, args.output) if args.view_json else report))
         elif args.ensure_boot_report:
             report = ensure_boot_report(args.output, args.target_disk)
-            print(json.dumps(view_report(report) if args.view_json else report))
+            print(json.dumps(advisor_view(report, args.output) if args.view_json else report))
         elif args.launch:
             launch()
         elif args.menu:
@@ -490,7 +622,7 @@ def main():
             report['ScanBootId'] = boot_id()
             report['ScanTargetDisk'] = args.target_disk or ''
             path = save(report, args.output)
-            print(json.dumps(view_report(report)) if args.view_json else json.dumps(report) if args.json else render(report) + '\n\nSaved: ' + str(path))
+            print(json.dumps(advisor_view(report, args.output)) if args.view_json else json.dumps(report) if args.json else render(report) + '\n\nSaved: ' + str(path))
         return 0
     except (OSError, ValueError, RuntimeError, KeyError) as e:
         print('Scoring Matrix: ' + str(e), file=sys.stderr)

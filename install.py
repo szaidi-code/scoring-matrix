@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 
-FILES = ('scoring_matrix.py', 'MATRIX.md', 'LICENSE')
+FILES = ('scoring_matrix.py', 'advisor.py', 'MATRIX.md', 'LICENSE')
 
 
 def desktop_quote(value):
@@ -55,7 +55,7 @@ def install(data_home, source, uninstall=False):
     desktop.write_text('[Desktop Entry]\nType=Application\nName=Omarchy Hardware Score\n'
                        'Comment=Score this computer for Omarchy and compare your devices\n'
                        f'Exec={exec_line}\nTerminal=true\nIcon=utilities-system-monitor\n'
-                       'Categories=System;Utility;\nKeywords=Omarchy;Hardware;Score;Resources;\n'
+                       'Categories=System;\nKeywords=Omarchy;Hardware;Score;Resources;\n'
                        'X-ScoringMatrix-Managed=true\n', encoding='utf-8')
     if shutil.which('update-desktop-database'):
         subprocess.run(['update-desktop-database', str(desktop.parent)], check=False)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0 - 2026-11-25
+
+- Add local workload guidance, manual compatibility checks, snapshot comparisons, an optional CPU test, and redacted exports without changing matrix 1.0.
+- Keep compatibility evidence per computer, mark results stale when hardware, memory, firmware, drivers or kernel change, and preserve the score if advisor state is unreadable.
+- Validate and bound local advisor state, serialize private atomic writes, bound shell payloads, and make redacted exports atomic.
+- Publish the first stable release following beta.3.
+
 ## 0.1.0-beta.3
 
 - Modernize widget motion for Omarchy 4.5: route all QML animations through `Style.duration(...)` and `Style.easeOut` under 300ms so `omarchy toggle animations` disables transitions cleanly.

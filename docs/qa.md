@@ -47,3 +47,18 @@ The unified runtime at `17cd4ce804c0cbadf0c51bf759184803b0685533` passed all 26 
 The submission-preparation changes add licensing and release documentation, include LICENSE in the optional installer, and align its version marker with the manifest. Local Windows validation passed 25 tests with the Linux locking test skipped. A fresh staging check could not connect to either QA machine over SSH; the prior 26-test Linux/runtime results above apply to the unified build before these packaging changes.
 
 The marketplace baseline analysis was run locally against the candidate files using marketplace commit `d5ac6f9b` on September 7, 2026. It returned `review-required`, `blocksApproval: false`, and no unsafe-execution findings. Capability flags concern the optional installer, documented repository installation, and package installation inside GitHub CI (including broad keyword matches in documentation). This is a local precheck, not official marketplace approval or a complete security audit.
+
+## 0.1.0 release candidate — November 24, 2026
+
+| Check | Result |
+|---|---|
+| Unit and regression tests | 47 passed on local Python 3.14.8 |
+| Omarchy plugin manifest validation | Passed |
+| Python syntax, patch whitespace and Pylance diagnostics | Passed; no Python errors in changed implementation files |
+| Bandit 1.9.4 (`-ll`) | No medium/high findings; 10 low-severity informational findings |
+| Live read-only Linux collector | Completed and saved to an isolated temporary report directory |
+| Advisor CLI, redacted export and state persistence | Exercised against the live report |
+| Native widget preview | Advice, checks, and history/tools panels rendered and inspected with synthetic, non-identifying data |
+| Installed plugin | 0.1.0 installed locally on Omarchy 4.5.0-3; the real bar score and advisor panel loaded from a saved laptop report |
+
+This is local candidate evidence, not a claim that hardware compatibility has been certified. Python 3.9/3.11/3.14 coverage is configured in CI; only Python 3.14.8 was run locally. Complete the manual checks for graphics, Wi-Fi, Bluetooth, audio, suspend/resume, and external displays on each intended target device; the installed preview currently records those checks as untested. Wait for the public-commit CI results before requesting marketplace publication.

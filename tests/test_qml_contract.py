@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 import re
 import unittest
 
@@ -15,6 +14,7 @@ class QmlContractTests(unittest.TestCase):
     def test_manifest_and_collector_versions_match(self):
         manifest = json.loads((ROOT / 'manifest.json').read_text(encoding='utf-8'))
         self.assertEqual(manifest['version'], sm.VERSION)
+        self.assertRegex(manifest['version'], r'^\d+\.\d+\.\d+$')
 
     def test_every_qml_text_element_explicitly_uses_plain_text(self):
         for name, source in (('Widget.qml', self.widget_qml), ('ScoreRing.qml', self.ring_qml)):
